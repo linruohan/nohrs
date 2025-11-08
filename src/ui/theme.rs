@@ -39,7 +39,7 @@ pub mod theme {
     pub const TOOLBAR_BORDER: u32 = GRAY_200; // Border color
 
     // Accent colors
-    pub const ACCENT: u32 = 0x3B82F6; // Blue
+    pub const ACCENT: u32 = 0xDEA584; // Blue
     pub const ACCENT_HOVER: u32 = 0x2563EB;
     pub const ACCENT_LIGHT: u32 = 0xDCEEFF;
 }

@@ -8,7 +8,8 @@ use crate::pages::{
 use crate::ui::assets::Assets;
 use crate::ui::components::layout::footer::{footer, FooterProps};
 use crate::ui::components::layout::unified_toolbar::{
-    unified_toolbar, UnifiedToolbarProps, UNIFIED_TOOLBAR_HEIGHT,
+    unified_toolbar, AccountMenuAction, AccountMenuCommand, UnifiedToolbarProps,
+    UNIFIED_TOOLBAR_HEIGHT,
 };
 use crate::ui::theme::theme;
 use crate::ui::window::{self, traffic_lights::TrafficLightsHook};
@@ -22,6 +23,7 @@ use gpui_component::input::InputState;
 use gpui_component::resizable::ResizableState;
 use gpui_component::Icon;
 use gpui_component::Root;
+use tracing::info;
 
 pub struct NohrApp;
 
@@ -97,7 +99,13 @@ impl Focusable for RootView {
 
 impl Render for RootView {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let toolbar = unified_toolbar(UnifiedToolbarProps::default(), cx);
+        let toolbar = unified_toolbar(
+            UnifiedToolbarProps {
+                account_name: "syuya2036".to_string(),
+                account_plan: "Free".to_string(),
+            },
+            cx,
+        );
 
         div()
             .size_full()
@@ -106,6 +114,7 @@ impl Render for RootView {
             .bg(rgb(theme::BG))
             .relative()
             .track_focus(&self.focus_handle)
+            .on_action(cx.listener(Self::handle_account_action))
             .child(toolbar)
             .child(
                 // Main content: toolbar + page
@@ -139,6 +148,30 @@ impl Render for RootView {
 }
 
 impl RootView {
+    fn handle_account_action(
+        &mut self,
+        action: &AccountMenuAction,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        match action.command {
+            AccountMenuCommand::ProfileSummary => {
+                window.prevent_default();
+            }
+            AccountMenuCommand::Settings => self.set_page(PageKind::Settings, cx),
+            AccountMenuCommand::Extensions => self.set_page(PageKind::Extensions, cx),
+            AccountMenuCommand::Keymap
+            | AccountMenuCommand::Themes
+            | AccountMenuCommand::IconThemes => {
+                info!(?action.command, "Account menu item not yet implemented");
+                window.prevent_default();
+            }
+            AccountMenuCommand::SignOut => {
+                info!("Sign out requested");
+            }
+        }
+    }
+
     fn render_navigation(&self, cx: &mut Context<Self>) -> impl IntoElement {
         let active_page = self.current_page;
 
