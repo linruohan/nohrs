@@ -25,4 +25,3 @@ impl gpui::AssetSource for Assets {
             .collect())
     }
 }
-

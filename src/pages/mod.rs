@@ -1,10 +1,10 @@
 use gpui::AnyElement;
 
 pub mod explorer;
-pub mod search;
+pub mod extensions;
 pub mod git;
 pub mod s3;
-pub mod extensions;
+pub mod search;
 pub mod settings;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]

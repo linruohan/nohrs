@@ -2,9 +2,9 @@
 
 use crate::services::fs::listing::FileEntryDto;
 use crate::ui::theme::theme;
-use gpui::{div, Window, ParentElement, Styled, px, rgb};
+use gpui::{div, px, rgb, ParentElement, Styled, Window};
 use gpui_component::list::{List, ListDelegate, ListItem};
-use gpui_component::{IndexPath, Icon, IconName};
+use gpui_component::{Icon, IconName, IndexPath};
 
 pub struct FileListDelegate {
     pub items: Vec<FileEntryDto>,
@@ -63,7 +63,7 @@ impl ListDelegate for FileListDelegate {
         let file_type = get_file_type(&item.name, &item.kind);
 
         let mut row = ListItem::new(ix.clone())
-            .py(px(6.0))  // Reduced from 12.0 for compact rows
+            .py(px(6.0)) // Reduced from 12.0 for compact rows
             .px(px(24.0))
             .bg(rgb(bg_color))
             .child(
@@ -82,7 +82,7 @@ impl ListDelegate for FileListDelegate {
                             .child(
                                 Icon::new(icon_name)
                                     .size_4()
-                                    .text_color(rgb(theme::GRAY_600))
+                                    .text_color(rgb(theme::GRAY_600)),
                             )
                             .child(
                                 div()
@@ -92,8 +92,8 @@ impl ListDelegate for FileListDelegate {
                                     .overflow_hidden()
                                     .text_ellipsis()
                                     .whitespace_nowrap()
-                                    .child(item.name.clone())
-                            )
+                                    .child(item.name.clone()),
+                            ),
                     )
                     .child(
                         // Type column - compact
@@ -105,7 +105,7 @@ impl ListDelegate for FileListDelegate {
                             .overflow_hidden()
                             .text_ellipsis()
                             .whitespace_nowrap()
-                            .child(file_type)
+                            .child(file_type),
                     )
                     .child(
                         // Size column - compact
@@ -120,7 +120,7 @@ impl ListDelegate for FileListDelegate {
                                 "file" => human_bytes(item.size),
                                 "dir" => "-".to_string(),
                                 other => other.to_string(),
-                            })
+                            }),
                     )
                     .child(
                         // Modified column - compact
@@ -132,7 +132,7 @@ impl ListDelegate for FileListDelegate {
                             .overflow_hidden()
                             .text_ellipsis()
                             .whitespace_nowrap()
-                            .child(format_date(&item.modified))
+                            .child(format_date(&item.modified)),
                     )
                     .child(
                         // Actions column - compact
@@ -145,9 +145,9 @@ impl ListDelegate for FileListDelegate {
                                 Icon::new(IconName::File)
                                     .size_4()
                                     .text_color(rgb(theme::MUTED))
-                                    .cursor_pointer()
-                            )
-                    )
+                                    .cursor_pointer(),
+                            ),
+                    ),
             );
 
         // enable click to confirm
@@ -174,7 +174,12 @@ impl ListDelegate for FileListDelegate {
         self.selected = ix;
     }
 
-    fn confirm(&mut self, _secondary: bool, _window: &mut Window, _cx: &mut gpui::Context<List<Self>>) {
+    fn confirm(
+        &mut self,
+        _secondary: bool,
+        _window: &mut Window,
+        _cx: &mut gpui::Context<List<Self>>,
+    ) {
         if let Some(ix) = self.selected {
             if let Some(item) = self.items.get(ix.row) {
                 if let Some(cb) = &self.on_confirm {

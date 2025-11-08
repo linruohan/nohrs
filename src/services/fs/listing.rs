@@ -3,8 +3,8 @@ use serde::Serialize;
 use std::ffi::OsStr;
 use std::fs;
 use std::path::{Path, PathBuf};
-use tokio::task;
 use std::time::UNIX_EPOCH;
+use tokio::task;
 
 #[derive(Debug, Serialize, Clone)]
 pub struct FileEntryDto {
@@ -68,7 +68,12 @@ fn list_dir_impl(path: &str, limit: usize, cursor: Option<&str>) -> Result<ListR
         let md = fs::symlink_metadata(path);
         let (kind, size, modified) = match md {
             Ok(md) => {
-                let modified = md.modified().ok().and_then(|t| t.duration_since(UNIX_EPOCH).ok()).map(|d| d.as_secs()).unwrap_or(0);
+                let modified = md
+                    .modified()
+                    .ok()
+                    .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
+                    .map(|d| d.as_secs())
+                    .unwrap_or(0);
                 if md.file_type().is_dir() {
                     ("dir".to_string(), 0, modified)
                 } else if md.file_type().is_file() {

@@ -1,5 +1,5 @@
-use gpui::{prelude::*, div, px, rgb, AnyElement, Context, Render, Window};
 use crate::ui::theme::theme;
+use gpui::{div, prelude::*, px, rgb, AnyElement, Context, Render, Window};
 
 pub struct GitPage;
 
@@ -23,14 +23,14 @@ impl Render for GitPage {
                     .text_2xl()
                     .font_weight(gpui::FontWeight::BOLD)
                     .text_color(rgb(theme::FG))
-                    .child("📦 Git")
+                    .child("📦 Git"),
             )
             .child(
                 div()
                     .mt(px(16.0))
                     .text_base()
                     .text_color(rgb(theme::FG_SECONDARY))
-                    .child("Git連携機能を実装予定")
+                    .child("Git連携機能を実装予定"),
             )
     }
 }
@@ -40,4 +40,3 @@ impl crate::pages::Page for GitPage {
         <Self as Render>::render(self, window, cx).into_any_element()
     }
 }
-

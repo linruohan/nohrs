@@ -28,10 +28,7 @@ impl Default for FooterProps {
 }
 
 /// VSCode風のフッター（ステータスバー）
-pub fn footer<V: gpui::Render>(
-    props: FooterProps,
-    cx: &mut Context<V>,
-) -> impl IntoElement {
+pub fn footer<V: gpui::Render>(props: FooterProps, cx: &mut Context<V>) -> impl IntoElement {
     div()
         .h(px(28.0))
         .w_full()
@@ -79,7 +76,7 @@ pub fn footer<V: gpui::Render>(
                     IconName::File,
                     &props.total_size,
                     cx,
-                ))
+                )),
         )
         .child(
             // Right section - Info items
@@ -102,7 +99,7 @@ pub fn footer<V: gpui::Render>(
                     IconName::Folder,
                     &truncate_path(&props.current_path, 30),
                     cx,
-                ))
+                )),
         )
 }
 
@@ -125,17 +122,13 @@ fn footer_button<V: gpui::Render>(
         .rounded(px(4.0))
         .cursor_pointer()
         .hover(|style| style.bg(rgb(theme::GRAY_300)))
-        .child(
-            Icon::new(icon)
-                .size_3()
-                .text_color(rgb(theme::GRAY_700))
-        )
+        .child(Icon::new(icon).size_3().text_color(rgb(theme::GRAY_700)))
         .when(has_label, |this| {
             this.child(
                 div()
                     .text_xs()
                     .text_color(rgb(theme::GRAY_700))
-                    .child(label)
+                    .child(label),
             )
         })
 }
@@ -153,4 +146,3 @@ fn truncate_path(path: &str, max_len: usize) -> String {
     // Show first and last parts
     format!("{}/.../{}", parts[0], parts[parts.len() - 1])
 }
-
