@@ -12,7 +12,6 @@ Develop a fast, flexible, and extensible file explorer using Rust and gpui as a 
 Notes
 
 - The GUI is currently a placeholder entry-point that will be wired to gpui once a pinned version is selected.
-- HTTP endpoints are scaffolded but not implemented; focus is GUI-first for US1.
 
 ### macOS prerequisites for gpui
 
