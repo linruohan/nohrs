@@ -1,4 +1,4 @@
-# nohr
+# Nohrs
 
 Develop a fast, flexible, and extensible file explorer using Rust and gpui as a modern alternative to macOS Finder. The goal is to achieve both everyday usability and power-user functionality through a seamless, high-performance interface.
 
