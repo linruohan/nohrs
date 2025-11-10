@@ -27,47 +27,47 @@ gpui uses Metal on macOS and requires Xcode and the Metal toolchain.
 
 After completing the above, try building the GUI again.
 
-# Planned Features
+## Planned Features
 
 ### Navigation & UI
-- Tabs and split view for parallel directories  
-- Inline preview for images, PDFs, text, and Markdown  
-- Command palette for quick action search (VS Code-style)  
-- File icons and custom emoji labels  
+- Tabs and split view for parallel directories
+- Inline preview for images, PDFs, text, and Markdown
+- Command palette for quick action search (VS Code-style)
+- File icons and custom emoji labels
 
 ### File Operations
-- In-place editing for `.txt` and `.md`  
-- Bulk rename with regex and metadata rules  
-- Advanced drag-and-drop (S3 upload, Git staging)  
-- Clipboard history for multiple copied items  
+- In-place editing for `.txt` and `.md`
+- Bulk rename with regex and metadata rules
+- Advanced drag-and-drop (S3 upload, Git staging)
+- Clipboard history for multiple copied items
 
 ### Search & Indexing
-- Fast full-text search with Tantivy + ripgrep (fuzzy supported)  
-- Smart folders filtered by tags, type, or date  
-- Search inside previews (PDF, Markdown, code)  
+- Fast full-text search with Tantivy + ripgrep (fuzzy supported)
+- Smart folders filtered by tags, type, or date
+- Search inside previews (PDF, Markdown, code)
 - File ranking by open frequency, recency, and relevance etc.
 
 ### Terminal Integration
-- Built-in PTY linked to current directory  
-- Drag-to-escape paste for file paths  
-- Task runner for one-click command execution  
+- Built-in PTY linked to current directory
+- Drag-to-escape paste for file paths
+- Task runner for one-click command execution
 
 ### Git Integration
-- Sidebar for status and branches  
-- Diff preview and blame view  
-- Merge-conflict resolution UI  
+- Sidebar for status and branches
+- Diff preview and blame view
+- Merge-conflict resolution UI
 
 ### S3-Compatible Storage
-- MinIO, Wasabi, and Cloudflare R2 support  
-- Transfer queue and parallel uploads  
-- Metadata editing and presigned URLs  
-- Offline cache and sync recovery  
+- MinIO, Wasabi, and Cloudflare R2 support
+- Transfer queue and parallel uploads
+- Metadata editing and presigned URLs
+- Offline cache and sync recovery
 
 ### Automation & Extensions
-- Plugin system for custom UI or features  
-- Folder-watch actions (auto-tag, auto-transfer)  
-- CLI / HTTP API for external control  
-- Remote browsing via SSH  
+- Plugin system for custom UI or features
+- Folder-watch actions (auto-tag, auto-transfer)
+- CLI / HTTP API for external control
+- Remote browsing via SSH
 
 ## Contributing
 

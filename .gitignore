@@ -19,3 +19,7 @@
 
 # Coverage / tooling
 coverage/
+
+# personal
+/.github
+/.specify
