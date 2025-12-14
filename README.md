@@ -7,7 +7,7 @@ Develop a fast, flexible, and extensible file explorer using Rust and gpui as a 
 - Toolchain: Rust (stable), pinned via `rust-toolchain.toml`.
 - Build (core library only): `cargo build`
 - Build GUI binary (placeholder UI): `cargo build --features gui`
-  - Run GUI binary: `cargo run --features gui --bin nohr`
+  - Run GUI binary: `cargo run --features gui --bin nohrs`
 
 Notes
 
