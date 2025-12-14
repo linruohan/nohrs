@@ -27,7 +27,7 @@ gpui uses Metal on macOS and requires Xcode and the Metal toolchain.
 
 After completing the above, try building the GUI again.
 
-# Planned Features
+## Planned Features
 
 ### Navigation & UI
 - Tabs and split view for parallel directories
