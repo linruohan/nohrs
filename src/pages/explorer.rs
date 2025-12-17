@@ -202,25 +202,31 @@ impl ExplorerPage {
     }
 
     fn sort_entries(&self, entries: &mut [FileEntryDto]) {
-        match self.sort_key {
-            SortKey::Name => {
-                entries.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()))
+        entries.sort_by(|a, b| {
+            // Directories before files
+            let is_dir_a = a.kind == "dir";
+            let is_dir_b = b.kind == "dir";
+
+            match is_dir_b.cmp(&is_dir_a) {
+                std::cmp::Ordering::Equal => {
+                    let order = match self.sort_key {
+                        SortKey::Name => a.name.to_lowercase().cmp(&b.name.to_lowercase()),
+                        SortKey::Size => a.size.cmp(&b.size),
+                        SortKey::Modified => a.modified.cmp(&b.modified),
+                        SortKey::Type => {
+                            let ext_a = get_extension(&a.name, &a.kind);
+                            let ext_b = get_extension(&b.name, &b.kind);
+                            ext_a.cmp(&ext_b)
+                        }
+                    };
+                    if self.sort_asc {
+                        order
+                    } else {
+                        order.reverse()
+                    }
+                }
+                kind_order => kind_order,
             }
-            SortKey::Size => entries.sort_by(|a, b| a.size.cmp(&b.size)),
-            SortKey::Modified => entries.sort_by(|a, b| a.modified.cmp(&b.modified)),
-            SortKey::Type => entries.sort_by(|a, b| {
-                let ext_a = get_extension(&a.name, &a.kind);
-                let ext_b = get_extension(&b.name, &b.kind);
-                ext_a.cmp(&ext_b)
-            }),
-        }
-        if !self.sort_asc {
-            entries.reverse();
-        }
-        entries.sort_by(|a, b| match (a.kind.as_str(), b.kind.as_str()) {
-            ("dir", "file") => std::cmp::Ordering::Less,
-            ("file", "dir") => std::cmp::Ordering::Greater,
-            _ => std::cmp::Ordering::Equal,
         });
     }
 
