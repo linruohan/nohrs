@@ -147,8 +147,7 @@ impl ListDelegate for FileListDelegate {
 
         // enable click to confirm
         let item_clone = item.clone();
-        if self.on_confirm.is_some() {
-            let cb = self.on_confirm.as_ref().unwrap();
+        if let Some(cb) = &self.on_confirm {
             // We cannot capture trait object by move directly; wrap call inside closure
             let ptr = cb as *const _;
             row = row.on_click(move |_, _, _| unsafe {

@@ -223,7 +223,7 @@ impl RootView {
             .on_click(cx.listener(move |view, _event, _window, cx| {
                 view.set_page(page, cx);
             }))
-            .child(Icon::new(Icon::empty()).path(page.icon_path()).size_5().text_color(if active {
+            .child(Icon::new(Icon::empty()).size_5().text_color(if active {
                 cx.theme().accent
             } else {
                 cx.theme().accent.opacity(0.5)

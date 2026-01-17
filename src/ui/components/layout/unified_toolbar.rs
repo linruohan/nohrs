@@ -39,7 +39,7 @@ pub fn unified_toolbar<V: Render>(
         .window_control_area(WindowControlArea::Drag);
 
     let account_button = Button::new(ACCOUNT_BUTTON_ID)
-        .icon(Icon::new(IconName::CircleUser).size_5().text_color(cx.theme().secondary))
+        .icon(IconName::CircleUser)
         .rounded(ButtonRounded::Large)
         .compact()
         .with_variant(ButtonVariant::Ghost)
@@ -47,12 +47,12 @@ pub fn unified_toolbar<V: Render>(
         .dropdown_menu(move |menu, _window, cx| {
             let header_name = account_name.clone();
             let header_plan = account_plan.clone();
+            let accent_foreground = cx.theme().accent_foreground;
+            let secondary = cx.theme().secondary;
 
             let mut menu = menu
                 .min_w(px(220.0))
                 .menu_element_with_disabled(
-                    // Icon::new(IconName::CircleUser).size_4().
-                    // text_color(cx.theme().secondary),
                     AccountMenuAction::boxed(AccountMenuCommand::ProfileSummary),
                     true,
                     move |_, _| {
@@ -63,14 +63,14 @@ pub fn unified_toolbar<V: Render>(
                             .child(
                                 div()
                                     .text_sm()
-                                    .text_color(cx.theme().accent_foreground)
+                                    .text_color(accent_foreground)
                                     .child(header_name.clone()),
                             )
                             .when(!header_plan.is_empty(), |this| {
                                 this.child(
                                     div()
                                         .text_xs()
-                                        .text_color(cx.theme().secondary)
+                                        .text_color(secondary)
                                         .child(header_plan.clone()),
                                 )
                             })

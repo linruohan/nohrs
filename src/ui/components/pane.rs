@@ -3,7 +3,7 @@
 use gpui::{div, prelude::*, px, App, IntoElement};
 use gpui_component::ActiveTheme;
 /// Non-functional tab bar (placeholder)
-pub fn tab_bar<'a>(cx: &mut App) -> impl IntoElement {
+pub fn tab_bar(cx: &mut App) -> impl IntoElement {
     div()
         .flex()
         .gap_2()

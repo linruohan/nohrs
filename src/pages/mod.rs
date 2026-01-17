@@ -1,4 +1,5 @@
 use gpui::AnyElement;
+use gpui_component::IconName;
 
 pub mod explorer;
 pub mod extensions;
@@ -29,14 +30,14 @@ impl PageKind {
         }
     }
 
-    pub fn icon_path(&self) -> &'static str {
+    pub fn icon_name(&self) -> IconName {
         match self {
-            PageKind::Explorer => "icons/folder.svg",
-            PageKind::Search => "icons/search.svg",
-            PageKind::Git => "icons/github.svg",
-            PageKind::S3 => "icons/database.svg",
-            PageKind::Extensions => "icons/layout-dashboard.svg",
-            PageKind::Settings => "icons/settings.svg",
+            PageKind::Explorer => IconName::Folder,
+            PageKind::Search => IconName::Search,
+            PageKind::Git => IconName::GitHub,
+            PageKind::S3 => IconName::HardDrive,
+            PageKind::Extensions => IconName::LayoutDashboard,
+            PageKind::Settings => IconName::Settings,
         }
     }
 
