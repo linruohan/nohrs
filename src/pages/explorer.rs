@@ -7,7 +7,14 @@ use gpui::{
     div, prelude::*, px, size, AnyElement, App, Context, Entity, FocusHandle, Focusable,
     IntoElement, Render, Window,
 };
-use gpui_component::{breadcrumb::{Breadcrumb, BreadcrumbItem}, gray, gray_50, input::{Input, InputState}, list::{ListEvent, ListState}, resizable::{h_resizable, resizable_panel, ResizableState}, v_virtual_list, ActiveTheme, Icon, IconName, VirtualListScrollHandle};
+use gpui_component::{
+    breadcrumb::{Breadcrumb, BreadcrumbItem},
+    gray, gray_50,
+    input::{Input, InputState},
+    list::{ListEvent, ListState},
+    resizable::{h_resizable, resizable_panel, ResizableState},
+    v_virtual_list, ActiveTheme, Icon, IconName, VirtualListScrollHandle,
+};
 
 use crate::{
     services::fs::listing::{list_dir_sync, FileEntryDto, ListParams},
@@ -647,7 +654,11 @@ impl ExplorerPage {
                                 view.toggle_search(window, cx);
                             }))
                             .child(Icon::new(IconName::Search).size_4().text_color(
-                                if self.search_visible { cx.theme().accent } else { cx.theme().primary },
+                                if self.search_visible {
+                                    cx.theme().accent
+                                } else {
+                                    cx.theme().primary
+                                },
                             )),
                     ),
             )

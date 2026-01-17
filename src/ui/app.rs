@@ -4,7 +4,9 @@ use gpui::{
     div, prelude::*, px, size, AnyElement, App, Application, Bounds, Context, Entity, FocusHandle,
     Focusable, IntoElement, Render, Window,
 };
-use gpui_component::{input::InputState, orange_200, resizable::ResizableState, ActiveTheme, Icon, Root};
+use gpui_component::{
+    input::InputState, orange_200, resizable::ResizableState, ActiveTheme, Icon, Root,
+};
 use gpui_component_assets::Assets;
 use tracing::info;
 
@@ -22,8 +24,8 @@ use crate::{
                 UNIFIED_TOOLBAR_HEIGHT,
             },
         },
-        themes,
         window::{self, traffic_lights::TrafficLightsHook},
+        AppTitleBar,
     },
 };
 
@@ -34,8 +36,7 @@ impl NohrsApp {
         init_logging();
 
         Application::new().with_assets(Assets).run(|app: &mut App| {
-            gpui_component::init(app);
-            themes::init(app);
+            super::init(app);
 
             let bounds = Bounds::centered(None, size(px(1280.0), px(780.0)), app);
             let traffic_lights = TrafficLightsHook::new().center_vertically(UNIFIED_TOOLBAR_HEIGHT);
@@ -55,10 +56,12 @@ impl NohrsApp {
                 let s3 = cx.new(|_cx| S3Page::new());
                 let extensions = cx.new(|_cx| ExtensionsPage::new());
                 let settings = cx.new(|_cx| SettingsPage::new());
+                let title_bar = cx.new(|cx| AppTitleBar::new("nohrs", window, cx));
 
                 let view = cx.new(|_cx| RootView {
                     current_page: PageKind::Explorer,
                     focus_handle,
+                    title_bar,
                     explorer,
                     search,
                     git,
@@ -77,6 +80,7 @@ impl NohrsApp {
 pub struct RootView {
     current_page: PageKind,
     focus_handle: FocusHandle,
+    title_bar: Entity<AppTitleBar>,
     // Page entities
     explorer: Entity<ExplorerPage>,
     search: Entity<SearchPage>,
@@ -108,7 +112,7 @@ impl Render for RootView {
         let notification_layer = Root::render_notification_layer(window, cx);
         let toolbar = unified_toolbar(
             UnifiedToolbarProps {
-                account_name: "syuya2036".to_string(),
+                account_name: "Gaia2036".to_string(),
                 account_plan: "Free".to_string(),
             },
             cx,
@@ -122,6 +126,7 @@ impl Render for RootView {
             .relative()
             .track_focus(&self.focus_handle)
             .on_action(cx.listener(Self::handle_account_action))
+            .child(self.title_bar.clone())
             .child(toolbar)
             .child(
                 // Main content: toolbar + page

@@ -1,7 +1,11 @@
 #![cfg(feature = "gui")]
 
 use gpui::{div, px, ParentElement, Styled, Window};
-use gpui_component::{gray_50, list::{ListDelegate, ListItem, ListState}, ActiveTheme, Icon, IconName, IndexPath};
+use gpui_component::{
+    gray_50,
+    list::{ListDelegate, ListItem, ListState},
+    ActiveTheme, Icon, IconName, IndexPath,
+};
 
 use crate::services::fs::listing::FileEntryDto;
 
