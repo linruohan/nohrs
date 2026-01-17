@@ -9,7 +9,7 @@ use gpui::{
 };
 use gpui_component::{
     breadcrumb::{Breadcrumb, BreadcrumbItem},
-    gray, gray_50,
+    gray_600,
     input::{Input, InputState},
     list::{ListEvent, ListState},
     resizable::{h_resizable, resizable_panel, ResizableState},
@@ -654,11 +654,7 @@ impl ExplorerPage {
                                 view.toggle_search(window, cx);
                             }))
                             .child(Icon::new(IconName::Search).size_4().text_color(
-                                if self.search_visible {
-                                    cx.theme().accent
-                                } else {
-                                    cx.theme().primary
-                                },
+                                if self.search_visible { cx.theme().magenta } else { gray_600() },
                             )),
                     ),
             )
@@ -997,7 +993,7 @@ impl ExplorerPage {
                     .gap_2()
                     .px(px(12.0))
                     .py(px(10.0))
-                    .child(Icon::new(IconName::Search).size_4().text_color(cx.theme().secondary))
+                    .child(IconName::Search)
                     .child(
                         div()
                             .flex_1()
@@ -1192,8 +1188,6 @@ impl ExplorerPage {
             _ => IconName::File,
         };
 
-        let bg_color = if ix.is_multiple_of(2) { cx.theme().background } else { gray_50() };
-
         let file_type = get_file_type(&item.name, &item.kind);
 
         let max_chars = (self.col_name_width / 8.0) as usize;
@@ -1207,7 +1201,6 @@ impl ExplorerPage {
             .w(px(total_width))
             .h(px(32.0))
             .px(px(24.0))
-            .bg(bg_color)
             .on_click(cx.listener(move |this, event: &gpui::ClickEvent, window, cx| {
                 if let gpui::ClickEvent::Mouse(mouse) = event {
                     if mouse.up.button == gpui::MouseButton::Left {
@@ -1243,7 +1236,6 @@ impl ExplorerPage {
                                 div()
                                     .text_sm()
                                     .font_weight(gpui::FontWeight::MEDIUM)
-                                    .text_color(cx.theme().primary)
                                     .overflow_hidden()
                                     .text_ellipsis()
                                     .whitespace_nowrap()
@@ -1255,30 +1247,23 @@ impl ExplorerPage {
                             .w(px(self.col_type_width))
                             .flex_shrink_0()
                             .text_sm()
-                            .text_color(cx.theme().primary)
                             .overflow_hidden()
                             .text_ellipsis()
                             .whitespace_nowrap()
                             .child(file_type),
                     )
-                    .child(
-                        div()
-                            .w(px(self.col_size_width))
-                            .flex_shrink_0()
-                            .text_sm()
-                            .text_color(cx.theme().primary)
-                            .child(match item.kind.as_str() {
-                                "file" => human_bytes(item.size),
-                                "dir" => "-".to_string(),
-                                other => other.to_string(),
-                            }),
-                    )
+                    .child(div().w(px(self.col_size_width)).flex_shrink_0().text_sm().child(
+                        match item.kind.as_str() {
+                            "file" => human_bytes(item.size),
+                            "dir" => "-".to_string(),
+                            other => other.to_string(),
+                        },
+                    ))
                     .child(
                         div()
                             .w(px(self.col_modified_width))
                             .flex_shrink_0()
                             .text_sm()
-                            .text_color(cx.theme().primary)
                             .overflow_hidden()
                             .text_ellipsis()
                             .whitespace_nowrap()
@@ -1290,7 +1275,7 @@ impl ExplorerPage {
                             .flex_shrink_0()
                             .flex()
                             .justify_end()
-                            .child(Icon::new(IconName::File).size_4().text_color(cx.theme().muted)),
+                            .child(Icon::new(IconName::File).size_4()),
                     ),
             )
     }
@@ -1328,11 +1313,7 @@ impl ExplorerPage {
                             div()
                                 .text_xs()
                                 .font_weight(gpui::FontWeight::SEMIBOLD)
-                                .text_color(if is_active {
-                                    cx.theme().primary
-                                } else {
-                                    gray(px(30.0).into())
-                                })
+                                .text_color(if is_active { cx.theme().magenta } else { gray_600() })
                                 .child(label_str),
                         )
                         .when(is_active, |this| {
@@ -1371,9 +1352,11 @@ impl ExplorerPage {
                         .child(title),
                 ),
             )
-            .child(div().flex_1().overflow_hidden().px(px(16.0)).py(px(16.0)).child(
-                div().text_sm().text_color(cx.theme().primary).line_height(px(20.0)).child(body),
-            ))
+            .child(
+                div().flex_1().overflow_hidden().px(px(16.0)).py(px(16.0)).child(
+                    div().text_sm().text_color(gray_600()).line_height(px(20.0)).child(body),
+                ),
+            )
     }
 }
 
