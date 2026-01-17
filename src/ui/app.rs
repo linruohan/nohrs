@@ -4,7 +4,7 @@ use gpui::{
     div, prelude::*, px, size, AnyElement, App, Application, Bounds, Context, Entity, FocusHandle,
     Focusable, IntoElement, Render, Window,
 };
-use gpui_component::{input::InputState, resizable::ResizableState, ActiveTheme, Icon, Root};
+use gpui_component::{input::InputState, orange_200, resizable::ResizableState, ActiveTheme, Icon, Root};
 use gpui_component_assets::Assets;
 use tracing::info;
 
@@ -219,14 +219,14 @@ impl RootView {
             .rounded(px(8.0))
             .cursor_pointer()
             .when(active, |this| this.bg(cx.theme().background).shadow_sm())
-            .when(!active, |this| this.hover(|style| style.bg(cx.theme().info_hover)))
+            .when(!active, |this| this.hover(|style| style.bg(cx.theme().muted_foreground)))
             .on_click(cx.listener(move |view, _event, _window, cx| {
                 view.set_page(page, cx);
             }))
-            .child(Icon::new(Icon::empty()).size_5().text_color(if active {
-                cx.theme().accent
+            .child(Icon::new(page.icon_name()).size_5().text_color(if active {
+                orange_200()
             } else {
-                cx.theme().accent.opacity(0.5)
+                cx.theme().primary
             }))
     }
 

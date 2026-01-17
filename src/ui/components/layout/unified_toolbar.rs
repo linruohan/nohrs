@@ -6,7 +6,7 @@ use gpui::{div, prelude::*, px, Action, Context, IntoElement, Pixels, Render, Wi
 use gpui_component::{
     button::{Button, ButtonRounded, ButtonVariant, ButtonVariants},
     menu::DropdownMenu,
-    ActiveTheme, Icon, IconName, Sizable, Size,
+    ActiveTheme, IconName, Sizable, Size,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -47,8 +47,8 @@ pub fn unified_toolbar<V: Render>(
         .dropdown_menu(move |menu, _window, cx| {
             let header_name = account_name.clone();
             let header_plan = account_plan.clone();
-            let accent_foreground = cx.theme().accent_foreground;
-            let secondary = cx.theme().secondary;
+            let accent_foreground = cx.theme().foreground;
+            let secondary = cx.theme().primary.opacity(0.4);
 
             let mut menu = menu
                 .min_w(px(220.0))
@@ -81,33 +81,33 @@ pub fn unified_toolbar<V: Render>(
             menu = menu
                 .menu_with_icon(
                     "Settings",
-                    Icon::new(IconName::Settings),
+                    IconName::Settings,
                     AccountMenuAction::boxed(AccountMenuCommand::Settings),
                 )
                 .menu_with_icon(
                     "Keymap",
-                    Icon::new(IconName::SquareTerminal),
+                    IconName::SquareTerminal,
                     AccountMenuAction::boxed(AccountMenuCommand::Keymap),
                 )
                 .menu_with_icon(
                     "Themes…",
-                    Icon::new(IconName::Palette),
+                    IconName::Palette,
                     AccountMenuAction::boxed(AccountMenuCommand::Themes),
                 )
                 .menu_with_icon(
                     "Icon Themes…",
-                    Icon::new(IconName::GalleryVerticalEnd),
+                    IconName::GalleryVerticalEnd,
                     AccountMenuAction::boxed(AccountMenuCommand::IconThemes),
                 )
                 .menu_with_icon(
                     "Extensions",
-                    Icon::new(IconName::LayoutDashboard),
+                    IconName::LayoutDashboard,
                     AccountMenuAction::boxed(AccountMenuCommand::Extensions),
                 )
                 .separator()
                 .menu_with_icon(
                     "Sign Out",
-                    Icon::new(IconName::ChevronRight),
+                    IconName::ChevronRight,
                     AccountMenuAction::boxed(AccountMenuCommand::SignOut),
                 );
 

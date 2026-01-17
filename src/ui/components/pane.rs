@@ -9,11 +9,11 @@ pub fn tab_bar(cx: &mut App) -> impl IntoElement {
         .gap_2()
         .p_2()
         .border_1()
-        .border_color(cx.theme().accent)
+        .border_color(cx.theme().border)
         .bg(cx.theme().background)
-        .text_color(cx.theme().accent_foreground)
-        .child(div().px_2().py_1().border_1().border_color(cx.theme().accent).child("Tab 1"))
-        .child(div().px_2().py_1().border_1().border_color(cx.theme().accent).child("Tab 2"))
+        .text_color(cx.theme().primary)
+        .child(div().px_2().py_1().border_1().border_color(cx.theme().border).child("Tab 1"))
+        .child(div().px_2().py_1().border_1().border_color(cx.theme().border).child("Tab 2"))
 }
 
 /// Split container with a vertical resize bar (non-functional placeholder)
@@ -25,10 +25,10 @@ pub fn split_container<L: IntoElement, R: IntoElement>(
     div()
         .flex()
         .gap_1()
-        .child(div().border_1().border_color(cx.theme().accent).child(left))
+        .child(div().border_1().border_color(cx.theme().border).child(left))
         .child(
             // Resize bar placeholder
-            div().w(px(4.0)).bg(cx.theme().accent),
+            div().w(px(4.0)).bg(cx.theme().background),
         )
-        .child(div().border_1().border_color(cx.theme().accent).child(right))
+        .child(div().border_1().border_color(cx.theme().border).child(right))
 }

@@ -7,14 +7,7 @@ use gpui::{
     div, prelude::*, px, size, AnyElement, App, Context, Entity, FocusHandle, Focusable,
     IntoElement, Render, Window,
 };
-use gpui_component::{
-    breadcrumb::{Breadcrumb, BreadcrumbItem},
-    gray_50, gray_600,
-    input::{Input, InputState},
-    list::{ListEvent, ListState},
-    resizable::{h_resizable, resizable_panel, ResizableState},
-    v_virtual_list, ActiveTheme, Icon, IconName, VirtualListScrollHandle,
-};
+use gpui_component::{breadcrumb::{Breadcrumb, BreadcrumbItem}, gray, gray_50, input::{Input, InputState}, list::{ListEvent, ListState}, resizable::{h_resizable, resizable_panel, ResizableState}, v_virtual_list, ActiveTheme, Icon, IconName, VirtualListScrollHandle};
 
 use crate::{
     services::fs::listing::{list_dir_sync, FileEntryDto, ListParams},
@@ -586,7 +579,7 @@ impl ExplorerPage {
             .border_color(cx.theme().border)
             .flex()
             .items_center()
-            .text_color(cx.theme().accent_foreground)
+            .text_color(cx.theme().primary)
             .px(px(24.0))
             .py(px(12.0))
             .gap_2()
@@ -607,7 +600,7 @@ impl ExplorerPage {
                                     cx.listener(|view, _, window, cx| view.go_back(window, cx)),
                                 )
                             })
-                            .child(div().text_sm().text_color(gray_600()).child("←")),
+                            .child(div().text_sm().text_color(cx.theme().primary).child("←")),
                     )
                     .child(
                         gpui_component::list::ListItem::new("nav-forward")
@@ -620,7 +613,7 @@ impl ExplorerPage {
                                     cx.listener(|view, _, window, cx| view.go_forward(window, cx)),
                                 )
                             })
-                            .child(div().text_sm().text_color(gray_600()).child("→")),
+                            .child(div().text_sm().text_color(cx.theme().primary).child("→")),
                     )
                     .child(div().w(px(1.0)).h(px(20.0)).bg(cx.theme().border).mx(px(4.0))),
             )
@@ -640,7 +633,7 @@ impl ExplorerPage {
                     .child(
                         div()
                             .text_xs()
-                            .text_color(cx.theme().secondary)
+                            .text_color(cx.theme().primary)
                             .whitespace_nowrap()
                             .child(format!("{} items", self.filtered_entries.len())),
                     )
@@ -654,7 +647,7 @@ impl ExplorerPage {
                                 view.toggle_search(window, cx);
                             }))
                             .child(Icon::new(IconName::Search).size_4().text_color(
-                                if self.search_visible { cx.theme().accent } else { gray_600() },
+                                if self.search_visible { cx.theme().accent } else { cx.theme().primary },
                             )),
                     ),
             )
@@ -704,7 +697,7 @@ impl ExplorerPage {
                     .child(Icon::new(icon).size_4().text_color(if is_active {
                         cx.theme().accent
                     } else {
-                        gray_600()
+                        cx.theme().primary
                     }))
                     .child(
                         div()
@@ -748,7 +741,7 @@ impl ExplorerPage {
                             .py(px(8.0))
                             .text_xs()
                             .font_weight(gpui::FontWeight::SEMIBOLD)
-                            .text_color(cx.theme().secondary)
+                            .text_color(cx.theme().primary)
                             .child("Folder"),
                     )
                     .child(self.render_shortcuts(cx)),
@@ -773,8 +766,8 @@ impl ExplorerPage {
             .rounded(px(6.0))
             .cursor_pointer()
             .hover(|this| this.bg(cx.theme().accordion_hover))
-            .child(Icon::new(icon).size_4().text_color(gray_600()))
-            .child(div().text_sm().text_color(cx.theme().accent_foreground).child(label))
+            .child(Icon::new(icon).size_4().text_color(cx.theme().primary))
+            .child(div().text_sm().text_color(cx.theme().primary).child(label))
     }
 
     fn render_shortcuts(&self, cx: &mut Context<Self>) -> impl IntoElement {
@@ -803,11 +796,11 @@ impl ExplorerPage {
                             .flex()
                             .items_center()
                             .gap_2()
-                            .child(Icon::new(icon).size_4().text_color(gray_600()))
+                            .child(Icon::new(icon).size_4().text_color(cx.theme().primary))
                             .child(
                                 div()
                                     .text_sm()
-                                    .text_color(cx.theme().accent_foreground)
+                                    .text_color(cx.theme().primary)
                                     .child(label_str.clone()),
                             ),
                     ),
@@ -927,19 +920,19 @@ impl ExplorerPage {
                     }
                 }),
             )
-            .child(Icon::new(icon_name).size_6().text_color(gray_600()))
+            .child(Icon::new(icon_name).size_6().text_color(cx.theme().primary))
             .child(
                 div()
                     .text_sm()
                     .font_weight(gpui::FontWeight::MEDIUM)
-                    .text_color(cx.theme().accent_foreground)
+                    .text_color(cx.theme().primary)
                     .overflow_hidden()
                     .text_ellipsis()
                     .whitespace_nowrap()
                     .child(name),
             )
-            .child(div().text_xs().text_color(cx.theme().secondary).child(file_type))
-            .child(div().text_xs().text_color(cx.theme().secondary).child(size_text))
+            .child(div().text_xs().text_color(cx.theme().primary).child(file_type))
+            .child(div().text_xs().text_color(cx.theme().primary).child(size_text))
             .child(div().text_xs().text_color(cx.theme().muted).child(modified_text))
             .into_any_element()
     }
@@ -1008,7 +1001,7 @@ impl ExplorerPage {
                                 div().h(px(18.0)).child(
                                     div()
                                         .text_xs()
-                                        .text_color(cx.theme().secondary)
+                                        .text_color(cx.theme().primary)
                                         .when(!is_empty, |this| {
                                             this.child(format!("{} matches", match_count))
                                         }),
@@ -1234,12 +1227,12 @@ impl ExplorerPage {
                             .gap_3()
                             .w(px(self.col_name_width))
                             .flex_shrink_0()
-                            .child(Icon::new(icon_name).size_4().text_color(gray_600()))
+                            .child(Icon::new(icon_name).size_4().text_color(cx.theme().primary))
                             .child(
                                 div()
                                     .text_sm()
                                     .font_weight(gpui::FontWeight::MEDIUM)
-                                    .text_color(cx.theme().accent_foreground)
+                                    .text_color(cx.theme().primary)
                                     .overflow_hidden()
                                     .text_ellipsis()
                                     .whitespace_nowrap()
@@ -1251,7 +1244,7 @@ impl ExplorerPage {
                             .w(px(self.col_type_width))
                             .flex_shrink_0()
                             .text_sm()
-                            .text_color(cx.theme().secondary)
+                            .text_color(cx.theme().primary)
                             .overflow_hidden()
                             .text_ellipsis()
                             .whitespace_nowrap()
@@ -1262,7 +1255,7 @@ impl ExplorerPage {
                             .w(px(self.col_size_width))
                             .flex_shrink_0()
                             .text_sm()
-                            .text_color(cx.theme().secondary)
+                            .text_color(cx.theme().primary)
                             .child(match item.kind.as_str() {
                                 "file" => human_bytes(item.size),
                                 "dir" => "-".to_string(),
@@ -1274,7 +1267,7 @@ impl ExplorerPage {
                             .w(px(self.col_modified_width))
                             .flex_shrink_0()
                             .text_sm()
-                            .text_color(cx.theme().secondary)
+                            .text_color(cx.theme().primary)
                             .overflow_hidden()
                             .text_ellipsis()
                             .whitespace_nowrap()
@@ -1325,9 +1318,9 @@ impl ExplorerPage {
                                 .text_xs()
                                 .font_weight(gpui::FontWeight::SEMIBOLD)
                                 .text_color(if is_active {
-                                    cx.theme().accent_foreground
+                                    cx.theme().primary
                                 } else {
-                                    cx.theme().secondary
+                                    gray(px(30.0).into())
                                 })
                                 .child(label_str),
                         )
@@ -1335,7 +1328,7 @@ impl ExplorerPage {
                             this.child(
                                 div()
                                     .text_xs()
-                                    .text_color(cx.theme().accent_foreground)
+                                    .text_color(cx.theme().primary)
                                     .child(sort_icon.unwrap_or("")),
                             )
                         }),
@@ -1363,12 +1356,12 @@ impl ExplorerPage {
                     div()
                         .text_sm()
                         .font_weight(gpui::FontWeight::SEMIBOLD)
-                        .text_color(cx.theme().accent_foreground)
+                        .text_color(cx.theme().primary)
                         .child(title),
                 ),
             )
             .child(div().flex_1().overflow_hidden().px(px(16.0)).py(px(16.0)).child(
-                div().text_sm().text_color(cx.theme().secondary).line_height(px(20.0)).child(body),
+                div().text_sm().text_color(cx.theme().primary).line_height(px(20.0)).child(body),
             ))
     }
 }

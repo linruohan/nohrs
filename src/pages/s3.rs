@@ -21,14 +21,14 @@ impl Render for S3Page {
                 div()
                     .text_2xl()
                     .font_weight(gpui::FontWeight::BOLD)
-                    .text_color(cx.theme().accent_foreground)
+                    .text_color(cx.theme().primary)
                     .child("☁️ S3"),
             )
             .child(
                 div()
                     .mt(px(16.0))
                     .text_base()
-                    .text_color(cx.theme().secondary)
+                    .text_color(cx.theme().primary)
                     .child("S3 compatible storage integration to be implemented"),
             )
     }
