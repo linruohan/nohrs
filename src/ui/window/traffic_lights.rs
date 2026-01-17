@@ -54,9 +54,7 @@ impl TrafficLightsHook {
 
     /// Apply the configuration to the supplied [`WindowOptions`].
     pub fn apply(&self, options: &mut WindowOptions) {
-        let titlebar = options
-            .titlebar
-            .get_or_insert_with(TitlebarOptions::default);
+        let titlebar = options.titlebar.get_or_insert_with(TitlebarOptions::default);
         titlebar.appears_transparent = true;
         titlebar.traffic_light_position = Some(self.position());
     }

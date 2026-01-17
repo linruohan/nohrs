@@ -1,29 +1,31 @@
 #![cfg(feature = "gui")]
 
-use crate::core::telemetry::logging::init_logging;
-use crate::pages::{
-    explorer::ExplorerPage, extensions::ExtensionsPage, git::GitPage, s3::S3Page,
-    search::SearchPage, settings::SettingsPage, PageKind,
-};
-use crate::ui::assets::Assets;
-use crate::ui::components::layout::footer::{footer, FooterProps};
-use crate::ui::components::layout::unified_toolbar::{
-    unified_toolbar, AccountMenuAction, AccountMenuCommand, UnifiedToolbarProps,
-    UNIFIED_TOOLBAR_HEIGHT,
-};
-use crate::ui::theme::theme;
-use crate::ui::window::{self, traffic_lights::TrafficLightsHook};
-
-use gpui::Entity;
 use gpui::{
-    div, prelude::*, px, rgb, size, AnyElement, App, Application, Bounds, Context, FocusHandle,
+    div, prelude::*, px, size, AnyElement, App, Application, Bounds, Context, Entity, FocusHandle,
     Focusable, IntoElement, Render, Window,
 };
-use gpui_component::input::InputState;
-use gpui_component::resizable::ResizableState;
-use gpui_component::Icon;
-use gpui_component::Root;
+use gpui_component::{input::InputState, resizable::ResizableState, ActiveTheme, Icon, Root};
+use gpui_component_assets::Assets;
 use tracing::info;
+
+use crate::{
+    core::telemetry::logging::init_logging,
+    pages::{
+        explorer::ExplorerPage, extensions::ExtensionsPage, git::GitPage, s3::S3Page,
+        search::SearchPage, settings::SettingsPage, PageKind,
+    },
+    ui::{
+        components::layout::{
+            footer::{footer, FooterProps},
+            unified_toolbar::{
+                unified_toolbar, AccountMenuAction, AccountMenuCommand, UnifiedToolbarProps,
+                UNIFIED_TOOLBAR_HEIGHT,
+            },
+        },
+        themes,
+        window::{self, traffic_lights::TrafficLightsHook},
+    },
+};
 
 pub struct NohrsApp;
 
@@ -33,12 +35,14 @@ impl NohrsApp {
 
         Application::new().with_assets(Assets).run(|app: &mut App| {
             gpui_component::init(app);
-            let resizable = ResizableState::new(app);
+            themes::init(app);
+
             let bounds = Bounds::centered(None, size(px(1280.0), px(780.0)), app);
             let traffic_lights = TrafficLightsHook::new().center_vertically(UNIFIED_TOOLBAR_HEIGHT);
             let window_options = window::unified_window_options(bounds, &traffic_lights);
 
             app.open_window(window_options, |window, cx| {
+                let resizable = cx.new(|_| ResizableState::default());
                 let search_input = cx.new(|cx| InputState::new(window, cx));
                 let focus_handle = cx.focus_handle();
 
@@ -63,7 +67,7 @@ impl NohrsApp {
                     settings,
                 });
 
-                cx.new(|cx| Root::new(view.into(), window, cx))
+                cx.new(|cx| Root::new(view.clone(), window, cx))
             })
             .expect("open window");
         });
@@ -99,6 +103,9 @@ impl Focusable for RootView {
 
 impl Render for RootView {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        let sheet_layer = Root::render_sheet_layer(window, cx);
+        let dialog_layer = Root::render_dialog_layer(window, cx);
+        let notification_layer = Root::render_notification_layer(window, cx);
         let toolbar = unified_toolbar(
             UnifiedToolbarProps {
                 account_name: "syuya2036".to_string(),
@@ -111,7 +118,7 @@ impl Render for RootView {
             .size_full()
             .flex()
             .flex_col()
-            .bg(rgb(theme::BG))
+            .bg(cx.theme().background)
             .relative()
             .track_focus(&self.focus_handle)
             .on_action(cx.listener(Self::handle_account_action))
@@ -141,9 +148,9 @@ impl Render for RootView {
                 // Footer status bar
                 footer(FooterProps::default(), cx),
             )
-            .children(Root::render_modal_layer(window, cx))
-            .children(Root::render_drawer_layer(window, cx))
-            .children(Root::render_notification_layer(window, cx))
+            .children(sheet_layer)
+            .children(dialog_layer)
+            .children(notification_layer)
     }
 }
 
@@ -157,7 +164,7 @@ impl RootView {
         match action.command {
             AccountMenuCommand::ProfileSummary => {
                 window.prevent_default();
-            }
+            },
             AccountMenuCommand::Settings => self.set_page(PageKind::Settings, cx),
             AccountMenuCommand::Extensions => self.set_page(PageKind::Extensions, cx),
             AccountMenuCommand::Keymap
@@ -165,10 +172,10 @@ impl RootView {
             | AccountMenuCommand::IconThemes => {
                 info!(?action.command, "Account menu item not yet implemented");
                 window.prevent_default();
-            }
+            },
             AccountMenuCommand::SignOut => {
                 info!("Sign out requested");
-            }
+            },
         }
     }
 
@@ -181,9 +188,9 @@ impl RootView {
             .flex()
             .flex_col()
             .items_center()
-            .bg(rgb(theme::TOOLBAR_BG))
+            .bg(cx.theme().background)
             .border_r_1()
-            .border_color(rgb(theme::TOOLBAR_BORDER))
+            .border_color(cx.theme().border)
             .py(px(16.0))
             .child(
                 // Page navigation buttons
@@ -211,25 +218,16 @@ impl RootView {
             .justify_center()
             .rounded(px(8.0))
             .cursor_pointer()
-            .when(active, |this| {
-                this.bg(rgb(theme::TOOLBAR_ACTIVE_BG)).shadow_sm()
-            })
-            .when(!active, |this| {
-                this.hover(|style| style.bg(rgb(theme::TOOLBAR_HOVER)))
-            })
+            .when(active, |this| this.bg(cx.theme().background).shadow_sm())
+            .when(!active, |this| this.hover(|style| style.bg(cx.theme().info_hover)))
             .on_click(cx.listener(move |view, _event, _window, cx| {
                 view.set_page(page, cx);
             }))
-            .child(
-                Icon::new(Icon::empty())
-                    .path(page.icon_path())
-                    .size_5()
-                    .text_color(rgb(if active {
-                        theme::TOOLBAR_ACTIVE_TEXT
-                    } else {
-                        theme::TOOLBAR_TEXT
-                    })),
-            )
+            .child(Icon::new(Icon::empty()).path(page.icon_path()).size_5().text_color(if active {
+                cx.theme().accent
+            } else {
+                cx.theme().accent.opacity(0.5)
+            }))
     }
 
     fn render_active_page(&self, _window: &mut Window, _cx: &mut Context<Self>) -> AnyElement {

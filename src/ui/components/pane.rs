@@ -1,55 +1,34 @@
 #![cfg(feature = "gui")]
 
-use crate::ui::theme::theme;
-use gpui::{div, prelude::*, px, rgb, IntoElement};
-
+use gpui::{div, prelude::*, px, App, IntoElement};
+use gpui_component::ActiveTheme;
 /// Non-functional tab bar (placeholder)
-pub fn tab_bar<'a>() -> impl IntoElement {
+pub fn tab_bar<'a>(cx: &mut App) -> impl IntoElement {
     div()
         .flex()
         .gap_2()
         .p_2()
         .border_1()
-        .border_color(rgb(theme::ACCENT))
-        .bg(rgb(theme::BG))
-        .text_color(rgb(theme::FG))
-        .child(
-            div()
-                .px_2()
-                .py_1()
-                .border_1()
-                .border_color(rgb(theme::ACCENT))
-                .child("Tab 1"),
-        )
-        .child(
-            div()
-                .px_2()
-                .py_1()
-                .border_1()
-                .border_color(rgb(theme::ACCENT))
-                .child("Tab 2"),
-        )
+        .border_color(cx.theme().accent)
+        .bg(cx.theme().background)
+        .text_color(cx.theme().accent_foreground)
+        .child(div().px_2().py_1().border_1().border_color(cx.theme().accent).child("Tab 1"))
+        .child(div().px_2().py_1().border_1().border_color(cx.theme().accent).child("Tab 2"))
 }
 
 /// Split container with a vertical resize bar (non-functional placeholder)
-pub fn split_container<L: IntoElement, R: IntoElement>(left: L, right: R) -> impl IntoElement {
+pub fn split_container<L: IntoElement, R: IntoElement>(
+    left: L,
+    right: R,
+    cx: &mut App,
+) -> impl IntoElement {
     div()
         .flex()
         .gap_1()
-        .child(
-            div()
-                .border_1()
-                .border_color(rgb(theme::ACCENT))
-                .child(left),
-        )
+        .child(div().border_1().border_color(cx.theme().accent).child(left))
         .child(
             // Resize bar placeholder
-            div().w(px(4.0)).bg(rgb(theme::ACCENT)),
+            div().w(px(4.0)).bg(cx.theme().accent),
         )
-        .child(
-            div()
-                .border_1()
-                .border_color(rgb(theme::ACCENT))
-                .child(right),
-        )
+        .child(div().border_1().border_color(cx.theme().accent).child(right))
 }

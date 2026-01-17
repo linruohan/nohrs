@@ -1,17 +1,15 @@
 #![cfg(feature = "gui")]
 
-use crate::ui::theme::theme;
-use gpui::{
-    div, prelude::*, px, rgb, Action, Context, IntoElement, Pixels, Render, WindowControlArea,
-};
+use std::fmt;
+
+use gpui::{div, prelude::*, px, Action, Context, IntoElement, Pixels, Render, WindowControlArea};
 use gpui_component::{
     button::{Button, ButtonRounded, ButtonVariant, ButtonVariants},
-    popup_menu::PopupMenuExt,
-    Icon, IconName, Sizable, Size,
+    menu::DropdownMenu,
+    ActiveTheme, Icon, IconName, Sizable, Size,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::fmt;
 
 pub const UNIFIED_TOOLBAR_HEIGHT: Pixels = px(36.0);
 const ACCOUNT_BUTTON_ID: &str = "unified-toolbar-account-button";
@@ -24,21 +22,15 @@ pub struct UnifiedToolbarProps {
 
 impl Default for UnifiedToolbarProps {
     fn default() -> Self {
-        Self {
-            account_name: "Guest".to_string(),
-            account_plan: String::new(),
-        }
+        Self { account_name: "Guest".to_string(), account_plan: String::new() }
     }
 }
 
 pub fn unified_toolbar<V: Render>(
     props: UnifiedToolbarProps,
-    _cx: &mut Context<V>,
+    cx: &mut Context<V>,
 ) -> impl IntoElement {
-    let UnifiedToolbarProps {
-        account_name,
-        account_plan,
-    } = props;
+    let UnifiedToolbarProps { account_name, account_plan } = props;
 
     let drag_region = div()
         .id("unified-toolbar-drag-region")
@@ -47,25 +39,20 @@ pub fn unified_toolbar<V: Render>(
         .window_control_area(WindowControlArea::Drag);
 
     let account_button = Button::new(ACCOUNT_BUTTON_ID)
-        .icon(
-            Icon::new(IconName::CircleUser)
-                .size_5()
-                .text_color(rgb(theme::FG_SECONDARY)),
-        )
+        .icon(Icon::new(IconName::CircleUser).size_5().text_color(cx.theme().secondary))
         .rounded(ButtonRounded::Large)
         .compact()
         .with_variant(ButtonVariant::Ghost)
         .with_size(Size::Small)
-        .popup_menu(move |menu, _window, _cx| {
+        .dropdown_menu(move |menu, _window, cx| {
             let header_name = account_name.clone();
             let header_plan = account_plan.clone();
 
             let mut menu = menu
                 .min_w(px(220.0))
-                .menu_element_with_icon_and_disabled(
-                    Icon::new(IconName::CircleUser)
-                        .size_4()
-                        .text_color(rgb(theme::FG_SECONDARY)),
+                .menu_element_with_disabled(
+                    // Icon::new(IconName::CircleUser).size_4().
+                    // text_color(cx.theme().secondary),
                     AccountMenuAction::boxed(AccountMenuCommand::ProfileSummary),
                     true,
                     move |_, _| {
@@ -76,14 +63,14 @@ pub fn unified_toolbar<V: Render>(
                             .child(
                                 div()
                                     .text_sm()
-                                    .text_color(rgb(theme::FG))
+                                    .text_color(cx.theme().accent_foreground)
                                     .child(header_name.clone()),
                             )
                             .when(!header_plan.is_empty(), |this| {
                                 this.child(
                                     div()
                                         .text_xs()
-                                        .text_color(rgb(theme::FG_SECONDARY))
+                                        .text_color(cx.theme().secondary)
                                         .child(header_plan.clone()),
                                 )
                             })
@@ -136,9 +123,9 @@ pub fn unified_toolbar<V: Render>(
         .items_center()
         .justify_between()
         .px(px(16.0))
-        .bg(rgb(theme::BG))
+        .bg(cx.theme().background)
         .border_b_1()
-        .border_color(rgb(theme::BORDER))
+        .border_color(cx.theme().border)
         .child(drag_region)
         .child(account_button)
 }
@@ -160,10 +147,7 @@ impl AccountMenuCommand {
         if let Some(s) = value.as_str() {
             return Self::from_str(s);
         }
-        value
-            .get("command")
-            .and_then(Value::as_str)
-            .and_then(Self::from_str)
+        value.get("command").and_then(Value::as_str).and_then(Self::from_str)
     }
 
     fn from_str(s: &str) -> Option<Self> {
@@ -197,9 +181,7 @@ impl AccountMenuAction {
 
 impl fmt::Debug for AccountMenuAction {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("AccountMenuAction")
-            .field("command", &self.command)
-            .finish()
+        f.debug_struct("AccountMenuAction").field("command", &self.command).finish()
     }
 }
 
@@ -209,10 +191,7 @@ impl Action for AccountMenuAction {
     }
 
     fn partial_eq(&self, other: &dyn Action) -> bool {
-        other
-            .as_any()
-            .downcast_ref::<Self>()
-            .map_or(false, |action| action.command == self.command)
+        other.as_any().downcast_ref::<Self>().map_or(false, |action| action.command == self.command)
     }
 
     fn name(&self) -> &'static str {

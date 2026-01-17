@@ -1,19 +1,24 @@
-use crate::services::fs::listing::{list_dir_sync, FileEntryDto, ListParams};
-use crate::ui::components::file_list::FileListDelegate;
-use crate::ui::theme::theme;
-
-use gpui::{
-    div, prelude::*, px, rgb, size, AnyElement, Context, Entity, FocusHandle, Focusable,
-    IntoElement, Render, Window,
-};
-use gpui_component::breadcrumb::{Breadcrumb, BreadcrumbItem};
-use gpui_component::input::{InputState, TextInput};
-use gpui_component::list::{List, ListEvent};
-use gpui_component::resizable::{h_resizable, resizable_panel, ResizableState};
-use gpui_component::{v_virtual_list, Icon, IconName, VirtualListScrollHandle};
 use std::{
     rc::Rc,
     time::{Duration, Instant},
+};
+
+use gpui::{
+    div, prelude::*, px, size, AnyElement, App, Context, Entity, FocusHandle, Focusable,
+    IntoElement, Render, Window,
+};
+use gpui_component::{
+    breadcrumb::{Breadcrumb, BreadcrumbItem},
+    gray_50, gray_600,
+    input::{Input, InputState},
+    list::{ListEvent, ListState},
+    resizable::{h_resizable, resizable_panel, ResizableState},
+    v_virtual_list, ActiveTheme, Icon, IconName, VirtualListScrollHandle,
+};
+
+use crate::{
+    services::fs::listing::{list_dir_sync, FileEntryDto, ListParams},
+    ui::components::file_list::FileListDelegate,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -43,7 +48,7 @@ pub struct ExplorerPage {
     search_visible: bool,
     search_input: Entity<InputState>,
     resizable: Entity<ResizableState>,
-    list: Option<Entity<List<FileListDelegate>>>,
+    list: Option<Entity<ListState<FileListDelegate>>>,
     subs: Vec<gpui::Subscription>,
     preview_path: Option<String>,
     preview_text: Option<String>,
@@ -133,11 +138,7 @@ impl ExplorerPage {
     }
 
     fn reload(&mut self) {
-        if let Ok(res) = list_dir_sync(ListParams {
-            path: &self.cwd,
-            limit: 1000,
-            cursor: None,
-        }) {
+        if let Ok(res) = list_dir_sync(ListParams { path: &self.cwd, limit: 1000, cursor: None }) {
             let mut e = res.entries;
             self.sort_entries(&mut e);
             self.entries = e;
@@ -156,11 +157,7 @@ impl ExplorerPage {
             + self.col_action_width
             + 48.0;
 
-        let sizes = self
-            .filtered_entries
-            .iter()
-            .map(|_| size(px(total_width), px(32.0)))
-            .collect();
+        let sizes = self.filtered_entries.iter().map(|_| size(px(total_width), px(32.0))).collect();
         self.item_sizes = Rc::new(sizes);
     }
 
@@ -217,14 +214,14 @@ impl ExplorerPage {
                             let ext_a = get_extension(&a.name, &a.kind);
                             let ext_b = get_extension(&b.name, &b.kind);
                             ext_a.cmp(&ext_b)
-                        }
+                        },
                     };
                     if self.sort_asc {
                         order
                     } else {
                         order.reverse()
                     }
-                }
+                },
                 kind_order => kind_order,
             }
         });
@@ -282,11 +279,8 @@ impl ExplorerPage {
             _ => return,
         };
 
-        self.resizing_column = Some(ResizingColumn {
-            column_index,
-            start_width,
-            start_x: start_pos,
-        });
+        self.resizing_column =
+            Some(ResizingColumn { column_index, start_width, start_x: start_pos });
     }
 
     fn update_column_resize(&mut self, current_pos: gpui::Point<gpui::Pixels>) {
@@ -299,7 +293,7 @@ impl ExplorerPage {
                 1 => self.col_type_width = new_width,
                 2 => self.col_size_width = new_width,
                 3 => self.col_modified_width = new_width,
-                _ => {}
+                _ => {},
             }
 
             self.update_item_sizes();
@@ -318,11 +312,7 @@ impl ExplorerPage {
     }
 
     fn record_click(&mut self, row: usize, click_count: usize) {
-        self.last_click_info = Some(LastClickInfo {
-            row,
-            timestamp: Instant::now(),
-            click_count,
-        });
+        self.last_click_info = Some(LastClickInfo { row, timestamp: Instant::now(), click_count });
     }
 
     fn activate_entry(&mut self, item: FileEntryDto, window: &mut Window, cx: &mut Context<Self>) {
@@ -337,38 +327,37 @@ impl ExplorerPage {
         if self.list.is_none() {
             let mut delegate = FileListDelegate::new();
             delegate.set_items(self.filtered_entries.clone());
-            let list = cx.new(|cx| List::new(delegate, window, cx).no_query());
-            let sub = cx.subscribe_in(
-                &list,
-                window,
-                |this, _list, event: &ListEvent, window, cx| match event {
-                    ListEvent::Select(ix) => {
-                        this.selected_index = Some(ix.row);
-                        if let Some(item) = this.filtered_entries.get(ix.row).cloned() {
-                            if item.kind == "file" {
-                                this.open_preview(item.path);
+            let list = cx.new(|cx| ListState::new(delegate, window, cx).searchable(false));
+            let sub =
+                cx.subscribe_in(&list, window, |this, _list, event: &ListEvent, window, cx| {
+                    match event {
+                        ListEvent::Select(ix) => {
+                            this.selected_index = Some(ix.row);
+                            if let Some(item) = this.filtered_entries.get(ix.row).cloned() {
+                                if item.kind == "file" {
+                                    this.open_preview(item.path);
+                                }
                             }
-                        }
-                    }
-                    ListEvent::Confirm(ix) => {
-                        if let Some(info) = this.last_click_info.as_ref() {
-                            if info.row == ix.row
-                                && info.timestamp.elapsed() < CONFIRM_SUPPRESS_WINDOW
-                                && info.click_count >= 2
-                            {
-                                this.last_click_info = None;
-                                return;
+                        },
+                        ListEvent::Confirm(ix) => {
+                            if let Some(info) = this.last_click_info.as_ref() {
+                                if info.row == ix.row
+                                    && info.timestamp.elapsed() < CONFIRM_SUPPRESS_WINDOW
+                                    && info.click_count >= 2
+                                {
+                                    this.last_click_info = None;
+                                    return;
+                                }
                             }
-                        }
-                        this.last_click_info = None;
-                        this.selected_index = Some(ix.row);
-                        if let Some(item) = this.filtered_entries.get(ix.row).cloned() {
-                            this.activate_entry(item, window, cx);
-                        }
+                            this.last_click_info = None;
+                            this.selected_index = Some(ix.row);
+                            if let Some(item) = this.filtered_entries.get(ix.row).cloned() {
+                                this.activate_entry(item, window, cx);
+                            }
+                        },
+                        ListEvent::Cancel => {},
                     }
-                    ListEvent::Cancel => {}
-                },
-            );
+                });
             self.subs.push(sub);
             self.list = Some(list);
         } else if let Some(list) = &self.list {
@@ -433,12 +422,7 @@ impl ExplorerPage {
         #[cfg(target_os = "windows")]
         let home = home.or_else(|| std::env::var("USERPROFILE").ok());
         if let Some(h) = home {
-            let p = |s: &str| {
-                std::path::Path::new(&h)
-                    .join(s)
-                    .to_string_lossy()
-                    .to_string()
-            };
+            let p = |s: &str| std::path::Path::new(&h).join(s).to_string_lossy().to_string();
             v.push(("Home".into(), h.clone()));
             for (label, sub) in [
                 ("Desktop", "Desktop"),
@@ -468,7 +452,7 @@ impl Render for ExplorerPage {
             .size_full()
             .flex()
             .flex_col()
-            .bg(rgb(theme::BG))
+            .bg(cx.theme().background)
             .relative()
             .track_focus(&self.focus_handle)
             .on_key_down(cx.listener(|this, event: &gpui::KeyDownEvent, window, cx| {
@@ -483,14 +467,12 @@ impl Render for ExplorerPage {
                     cx.stop_propagation();
                 }
             }))
-            .on_mouse_move(
-                cx.listener(|this, event: &gpui::MouseMoveEvent, _window, cx| {
-                    if this.resizing_column.is_some() {
-                        this.update_column_resize(event.position);
-                        cx.notify();
-                    }
-                }),
-            )
+            .on_mouse_move(cx.listener(|this, event: &gpui::MouseMoveEvent, _window, cx| {
+                if this.resizing_column.is_some() {
+                    this.update_column_resize(event.position);
+                    cx.notify();
+                }
+            }))
             .on_mouse_up(
                 gpui::MouseButton::Left,
                 cx.listener(|this, _event, _window, cx| {
@@ -503,7 +485,7 @@ impl Render for ExplorerPage {
             .child(self.render_header(window, cx))
             .child(
                 div().flex().flex_row().flex_grow().min_h(px(0.0)).child(
-                    h_resizable("file-explorer", self.resizable.clone())
+                    h_resizable("file-explorer")
                         .child(
                             resizable_panel()
                                 .size(px(180.0))
@@ -513,7 +495,7 @@ impl Render for ExplorerPage {
                                         .size_full()
                                         .overflow_hidden()
                                         .border_r_1()
-                                        .border_color(rgb(theme::BORDER))
+                                        .border_color(cx.theme().border)
                                         .child(self.render_sidebar(window, cx)),
                                 ),
                         )
@@ -537,16 +519,14 @@ impl Render for ExplorerPage {
                                         .size_full()
                                         .overflow_hidden()
                                         .border_l_1()
-                                        .border_color(rgb(theme::BORDER))
-                                        .child(self.render_preview()),
+                                        .border_color(cx.theme().border)
+                                        .child(self.render_preview(cx)),
                                 ),
                         )
                         .into_any_element(),
                 ),
             )
-            .when(self.search_visible, |this| {
-                this.child(self.render_floating_search(window, cx))
-            })
+            .when(self.search_visible, |this| this.child(self.render_floating_search(window, cx)))
     }
 }
 
@@ -563,9 +543,8 @@ impl ExplorerPage {
         let mut bc = Breadcrumb::new();
 
         if is_truncated {
-            bc = bc.item(
-                BreadcrumbItem::new("ellipsis", "…")
-                    .on_click(cx.listener(move |_this, _, _, _| {})),
+            bc = bc.child(
+                BreadcrumbItem::new("ellipsis...").on_click(cx.listener(move |_this, _, _, _| {})),
             );
         }
 
@@ -573,20 +552,12 @@ impl ExplorerPage {
 
         for (display_i, p) in display_parts.iter().enumerate() {
             let actual_i = start_idx + display_i;
-            let text = if p.is_empty() {
-                String::from("/")
-            } else {
-                p.clone()
-            };
+            let text = if p.is_empty() { String::from("/") } else { p.clone() };
 
             let mut path_here = String::new();
             for (j, part) in parts.iter().enumerate() {
                 if j == 0 {
-                    path_here = if part.is_empty() {
-                        "/".to_string()
-                    } else {
-                        part.clone()
-                    };
+                    path_here = if part.is_empty() { "/".to_string() } else { part.clone() };
                 } else {
                     path_here.push(std::path::MAIN_SEPARATOR);
                     path_here.push_str(part);
@@ -599,23 +570,23 @@ impl ExplorerPage {
                 path_here = self.cwd.clone();
             }
 
-            bc = bc.item(
-                BreadcrumbItem::new(("bc", actual_i), text).on_click(cx.listener(
-                    move |this, _, window, cx| this.change_dir(path_here.clone(), window, cx),
-                )),
-            );
+            bc = bc.child(BreadcrumbItem::new(format!("bc{}{}", actual_i, text)).on_click(
+                cx.listener(move |this, _, window, cx| {
+                    this.change_dir(path_here.clone(), window, cx)
+                }),
+            ));
         }
 
         let can_go_back = self.history_index > 0;
         let can_go_forward = self.history_index + 1 < self.history.len();
 
         div()
-            .bg(rgb(theme::BG))
+            .bg(cx.theme().background)
             .border_b_1()
-            .border_color(rgb(theme::BORDER))
+            .border_color(cx.theme().border)
             .flex()
             .items_center()
-            .text_color(rgb(theme::FG))
+            .text_color(cx.theme().accent_foreground)
             .px(px(24.0))
             .py(px(12.0))
             .gap_2()
@@ -626,7 +597,7 @@ impl ExplorerPage {
                     .gap_2()
                     .flex_shrink_0()
                     .child(
-                        gpui_component::ListItem::new("nav-back")
+                        gpui_component::list::ListItem::new("nav-back")
                             .px(px(8.0))
                             .py(px(6.0))
                             .rounded(px(6.0))
@@ -636,10 +607,10 @@ impl ExplorerPage {
                                     cx.listener(|view, _, window, cx| view.go_back(window, cx)),
                                 )
                             })
-                            .child(div().text_sm().text_color(rgb(theme::GRAY_600)).child("←")),
+                            .child(div().text_sm().text_color(gray_600()).child("←")),
                     )
                     .child(
-                        gpui_component::ListItem::new("nav-forward")
+                        gpui_component::list::ListItem::new("nav-forward")
                             .px(px(8.0))
                             .py(px(6.0))
                             .rounded(px(6.0))
@@ -649,15 +620,9 @@ impl ExplorerPage {
                                     cx.listener(|view, _, window, cx| view.go_forward(window, cx)),
                                 )
                             })
-                            .child(div().text_sm().text_color(rgb(theme::GRAY_600)).child("→")),
+                            .child(div().text_sm().text_color(gray_600()).child("→")),
                     )
-                    .child(
-                        div()
-                            .w(px(1.0))
-                            .h(px(20.0))
-                            .bg(rgb(theme::BORDER))
-                            .mx(px(4.0)),
-                    ),
+                    .child(div().w(px(1.0)).h(px(20.0)).bg(cx.theme().border).mx(px(4.0))),
             )
             .child(
                 div()
@@ -675,13 +640,13 @@ impl ExplorerPage {
                     .child(
                         div()
                             .text_xs()
-                            .text_color(rgb(theme::FG_SECONDARY))
+                            .text_color(cx.theme().secondary)
                             .whitespace_nowrap()
                             .child(format!("{} items", self.filtered_entries.len())),
                     )
                     .child(self.render_view_mode_toggle(cx))
                     .child(
-                        gpui_component::ListItem::new("search-toggle")
+                        gpui_component::list::ListItem::new("search-toggle")
                             .px(px(8.0))
                             .py(px(6.0))
                             .rounded(px(6.0))
@@ -689,11 +654,7 @@ impl ExplorerPage {
                                 view.toggle_search(window, cx);
                             }))
                             .child(Icon::new(IconName::Search).size_4().text_color(
-                                if self.search_visible {
-                                    rgb(theme::ACCENT)
-                                } else {
-                                    rgb(theme::GRAY_600)
-                                },
+                                if self.search_visible { cx.theme().accent } else { gray_600() },
                             )),
                     ),
             )
@@ -729,11 +690,11 @@ impl ExplorerPage {
         cx: &mut Context<Self>,
     ) -> impl IntoElement {
         let is_active = self.view_mode == mode;
-        gpui_component::ListItem::new(id)
+        gpui_component::list::ListItem::new(id)
             .px(px(8.0))
             .py(px(6.0))
             .rounded(px(6.0))
-            .when(is_active, |this| this.bg(rgb(theme::BG_HOVER)))
+            .when(is_active, |this| this.bg(cx.theme().accordion_hover))
             .on_click(cx.listener(move |this, _, _, cx| this.set_view_mode(mode, cx)))
             .child(
                 div()
@@ -741,17 +702,17 @@ impl ExplorerPage {
                     .items_center()
                     .gap_1()
                     .child(Icon::new(icon).size_4().text_color(if is_active {
-                        rgb(theme::ACCENT)
+                        cx.theme().accent
                     } else {
-                        rgb(theme::GRAY_600)
+                        gray_600()
                     }))
                     .child(
                         div()
                             .text_xs()
                             .text_color(if is_active {
-                                rgb(theme::FG)
+                                cx.theme().accent_foreground
                             } else {
-                                rgb(theme::FG_SECONDARY)
+                                cx.theme().secondary
                             })
                             .child(label),
                     ),
@@ -763,7 +724,7 @@ impl ExplorerPage {
             .size_full()
             .flex()
             .flex_col()
-            .bg(rgb(theme::BG))
+            .bg(cx.theme().background)
             .py(px(16.0))
             .child(
                 div()
@@ -787,7 +748,7 @@ impl ExplorerPage {
                             .py(px(8.0))
                             .text_xs()
                             .font_weight(gpui::FontWeight::SEMIBOLD)
-                            .text_color(rgb(theme::FG_SECONDARY))
+                            .text_color(cx.theme().secondary)
                             .child("Folder"),
                     )
                     .child(self.render_shortcuts(cx)),
@@ -799,7 +760,7 @@ impl ExplorerPage {
         icon: IconName,
         label: &str,
         _active: bool,
-        _cx: &mut Context<Self>,
+        cx: &mut Context<Self>,
     ) -> impl IntoElement {
         let label = label.to_string();
         div()
@@ -811,9 +772,9 @@ impl ExplorerPage {
             .py(px(8.0))
             .rounded(px(6.0))
             .cursor_pointer()
-            .hover(|this| this.bg(rgb(theme::BG_HOVER)))
-            .child(Icon::new(icon).size_4().text_color(rgb(theme::GRAY_600)))
-            .child(div().text_sm().text_color(rgb(theme::FG)).child(label))
+            .hover(|this| this.bg(cx.theme().accordion_hover))
+            .child(Icon::new(icon).size_4().text_color(gray_600()))
+            .child(div().text_sm().text_color(cx.theme().accent_foreground).child(label))
     }
 
     fn render_shortcuts(&self, cx: &mut Context<Self>) -> impl IntoElement {
@@ -833,7 +794,7 @@ impl ExplorerPage {
             let label_str = label.clone();
 
             shortcuts_el = shortcuts_el.child(
-                gpui_component::ListItem::new(("shortcut", i))
+                gpui_component::list::ListItem::new(("shortcut", i))
                     .on_click(cx.listener(move |this, _, window, cx| {
                         this.change_dir(p.clone(), window, cx)
                     }))
@@ -842,11 +803,11 @@ impl ExplorerPage {
                             .flex()
                             .items_center()
                             .gap_2()
-                            .child(Icon::new(icon).size_4().text_color(rgb(theme::GRAY_600)))
+                            .child(Icon::new(icon).size_4().text_color(gray_600()))
                             .child(
                                 div()
                                     .text_sm()
-                                    .text_color(rgb(theme::FG))
+                                    .text_color(cx.theme().accent_foreground)
                                     .child(label_str.clone()),
                             ),
                     ),
@@ -892,12 +853,7 @@ impl ExplorerPage {
 
     fn render_grid_view(&mut self, window: &mut Window, cx: &mut Context<Self>) -> AnyElement {
         let items = self.filtered_entries.clone();
-        let mut grid = div()
-            .flex()
-            .flex_wrap()
-            .gap_4()
-            .items_start()
-            .min_h(px(0.0));
+        let mut grid = div().flex().flex_wrap().gap_4().items_start().min_h(px(0.0));
 
         for (ix, item) in items.into_iter().enumerate() {
             let selected = self.selected_index == Some(ix);
@@ -940,17 +896,9 @@ impl ExplorerPage {
         let activation_item = item.clone();
         let preview_item = item.clone();
 
-        let bg_color = if selected {
-            rgb(theme::BG_HOVER)
-        } else {
-            rgb(theme::BG)
-        };
+        let bg_color = if selected { cx.theme().accordion_hover } else { cx.theme().background };
 
-        let border_color = if selected {
-            rgb(theme::ACCENT)
-        } else {
-            rgb(theme::BORDER)
-        };
+        let border_color = if selected { cx.theme().accent } else { cx.theme().border };
 
         div()
             .w(px(180.0))
@@ -960,7 +908,7 @@ impl ExplorerPage {
             .border_1()
             .border_color(border_color)
             .bg(bg_color)
-            .hover(|this| this.bg(rgb(theme::BG_HOVER)))
+            .hover(|this| this.bg(cx.theme().accordion_hover))
             .cursor_pointer()
             .flex()
             .flex_col()
@@ -979,39 +927,20 @@ impl ExplorerPage {
                     }
                 }),
             )
-            .child(
-                Icon::new(icon_name)
-                    .size_6()
-                    .text_color(rgb(theme::GRAY_600)),
-            )
+            .child(Icon::new(icon_name).size_6().text_color(gray_600()))
             .child(
                 div()
                     .text_sm()
                     .font_weight(gpui::FontWeight::MEDIUM)
-                    .text_color(rgb(theme::FG))
+                    .text_color(cx.theme().accent_foreground)
                     .overflow_hidden()
                     .text_ellipsis()
                     .whitespace_nowrap()
                     .child(name),
             )
-            .child(
-                div()
-                    .text_xs()
-                    .text_color(rgb(theme::FG_SECONDARY))
-                    .child(file_type),
-            )
-            .child(
-                div()
-                    .text_xs()
-                    .text_color(rgb(theme::FG_SECONDARY))
-                    .child(size_text),
-            )
-            .child(
-                div()
-                    .text_xs()
-                    .text_color(rgb(theme::MUTED))
-                    .child(modified_text),
-            )
+            .child(div().text_xs().text_color(cx.theme().secondary).child(file_type))
+            .child(div().text_xs().text_color(cx.theme().secondary).child(size_text))
+            .child(div().text_xs().text_color(cx.theme().muted).child(modified_text))
             .into_any_element()
     }
 
@@ -1034,9 +963,9 @@ impl ExplorerPage {
             .top(px(12.0))
             .right(px(24.0))
             .w(px(360.0))
-            .bg(rgb(theme::BG))
+            .bg(cx.theme().background)
             .border_1()
-            .border_color(rgb(theme::BORDER))
+            .border_color(cx.theme().border)
             .rounded(px(8.0))
             .shadow_lg()
             .on_mouse_down(
@@ -1051,11 +980,9 @@ impl ExplorerPage {
                     cx.stop_propagation();
                 }),
             )
-            .on_mouse_move(
-                cx.listener(|_this, _ev: &gpui::MouseMoveEvent, _window, cx| {
-                    cx.stop_propagation();
-                }),
-            )
+            .on_mouse_move(cx.listener(|_this, _ev: &gpui::MouseMoveEvent, _window, cx| {
+                cx.stop_propagation();
+            }))
             .on_scroll_wheel(cx.listener(|_this, _ev, _window, cx| {
                 cx.stop_propagation();
             }))
@@ -1066,11 +993,7 @@ impl ExplorerPage {
                     .gap_2()
                     .px(px(12.0))
                     .py(px(10.0))
-                    .child(
-                        Icon::new(IconName::Search)
-                            .size_4()
-                            .text_color(rgb(theme::FG_SECONDARY)),
-                    )
+                    .child(Icon::new(IconName::Search).size_4().text_color(cx.theme().secondary))
                     .child(
                         div()
                             .flex_1()
@@ -1079,13 +1002,13 @@ impl ExplorerPage {
                             .gap_1()
                             .child({
                                 let si = self.search_input.clone();
-                                TextInput::new(&si)
+                                Input::new(&si)
                             })
                             .child(
                                 div().h(px(18.0)).child(
                                     div()
                                         .text_xs()
-                                        .text_color(rgb(theme::FG_SECONDARY))
+                                        .text_color(cx.theme().secondary)
                                         .when(!is_empty, |this| {
                                             this.child(format!("{} matches", match_count))
                                         }),
@@ -1093,7 +1016,7 @@ impl ExplorerPage {
                             ),
                     )
                     .child(
-                        gpui_component::ListItem::new("close-search")
+                        gpui_component::list::ListItem::new("close-search")
                             .px(px(4.0))
                             .py(px(2.0))
                             .rounded(px(4.0))
@@ -1104,7 +1027,7 @@ impl ExplorerPage {
                                 div()
                                     .text_sm()
                                     .font_weight(gpui::FontWeight::BOLD)
-                                    .text_color(rgb(theme::MUTED))
+                                    .text_color(cx.theme().muted)
                                     .child("×"),
                             ),
                     ),
@@ -1177,9 +1100,9 @@ impl ExplorerPage {
             .w(px(table_width))
             .h(px(48.0))
             .px(px(24.0))
-            .bg(rgb(theme::BG))
+            .bg(cx.theme().background)
             .border_b_1()
-            .border_color(rgb(theme::BORDER))
+            .border_color(cx.theme().border)
             .child(
                 div()
                     .flex()
@@ -1246,7 +1169,7 @@ impl ExplorerPage {
                             cx.stop_propagation();
                         }),
                     )
-                    .child(div().w(px(1.0)).h_full().ml(px(3.5)).bg(rgb(theme::BORDER))),
+                    .child(div().w(px(1.0)).h_full().ml(px(3.5)).bg(cx.theme().border)),
             )
     }
 
@@ -1256,19 +1179,16 @@ impl ExplorerPage {
         ix: usize,
         cx: &mut Context<Self>,
     ) -> impl IntoElement {
+        use gpui_component::list::ListItem;
+
         use crate::ui::components::file_list::{format_date, get_file_type, human_bytes};
-        use gpui_component::ListItem;
 
         let icon_name = match item.kind.as_str() {
             "dir" => IconName::Folder,
             _ => IconName::File,
         };
 
-        let bg_color = if ix % 2 == 0 {
-            theme::BG
-        } else {
-            theme::GRAY_50
-        };
+        let bg_color = if ix.is_multiple_of(2) { cx.theme().background } else { gray_50() };
 
         let file_type = get_file_type(&item.name, &item.kind);
 
@@ -1283,26 +1203,24 @@ impl ExplorerPage {
             .w(px(total_width))
             .h(px(32.0))
             .px(px(24.0))
-            .bg(rgb(bg_color))
-            .on_click(
-                cx.listener(move |this, event: &gpui::ClickEvent, window, cx| {
-                    if let gpui::ClickEvent::Mouse(mouse) = event {
-                        if mouse.up.button == gpui::MouseButton::Left {
-                            this.record_click(ix, mouse.up.click_count);
-                            this.selected_index = Some(ix);
-                            if item_for_preview.kind == "file" {
-                                this.open_preview(item_for_preview.path.clone());
-                            }
-                            if mouse.up.click_count >= 2 {
-                                this.activate_entry(item_for_activate.clone(), window, cx);
-                            }
-                        }
-                    } else if let gpui::ClickEvent::Keyboard(_) = event {
+            .bg(bg_color)
+            .on_click(cx.listener(move |this, event: &gpui::ClickEvent, window, cx| {
+                if let gpui::ClickEvent::Mouse(mouse) = event {
+                    if mouse.up.button == gpui::MouseButton::Left {
+                        this.record_click(ix, mouse.up.click_count);
                         this.selected_index = Some(ix);
-                        this.activate_entry(item_for_activate.clone(), window, cx);
+                        if item_for_preview.kind == "file" {
+                            this.open_preview(item_for_preview.path.clone());
+                        }
+                        if mouse.up.click_count >= 2 {
+                            this.activate_entry(item_for_activate.clone(), window, cx);
+                        }
                     }
-                }),
-            )
+                } else if let gpui::ClickEvent::Keyboard(_) = event {
+                    this.selected_index = Some(ix);
+                    this.activate_entry(item_for_activate.clone(), window, cx);
+                }
+            }))
             .child(
                 div()
                     .flex()
@@ -1316,16 +1234,12 @@ impl ExplorerPage {
                             .gap_3()
                             .w(px(self.col_name_width))
                             .flex_shrink_0()
-                            .child(
-                                Icon::new(icon_name)
-                                    .size_4()
-                                    .text_color(rgb(theme::GRAY_600)),
-                            )
+                            .child(Icon::new(icon_name).size_4().text_color(gray_600()))
                             .child(
                                 div()
                                     .text_sm()
                                     .font_weight(gpui::FontWeight::MEDIUM)
-                                    .text_color(rgb(theme::FG))
+                                    .text_color(cx.theme().accent_foreground)
                                     .overflow_hidden()
                                     .text_ellipsis()
                                     .whitespace_nowrap()
@@ -1337,7 +1251,7 @@ impl ExplorerPage {
                             .w(px(self.col_type_width))
                             .flex_shrink_0()
                             .text_sm()
-                            .text_color(rgb(theme::FG_SECONDARY))
+                            .text_color(cx.theme().secondary)
                             .overflow_hidden()
                             .text_ellipsis()
                             .whitespace_nowrap()
@@ -1348,7 +1262,7 @@ impl ExplorerPage {
                             .w(px(self.col_size_width))
                             .flex_shrink_0()
                             .text_sm()
-                            .text_color(rgb(theme::FG_SECONDARY))
+                            .text_color(cx.theme().secondary)
                             .child(match item.kind.as_str() {
                                 "file" => human_bytes(item.size),
                                 "dir" => "-".to_string(),
@@ -1360,7 +1274,7 @@ impl ExplorerPage {
                             .w(px(self.col_modified_width))
                             .flex_shrink_0()
                             .text_sm()
-                            .text_color(rgb(theme::FG_SECONDARY))
+                            .text_color(cx.theme().secondary)
                             .overflow_hidden()
                             .text_ellipsis()
                             .whitespace_nowrap()
@@ -1372,11 +1286,7 @@ impl ExplorerPage {
                             .flex_shrink_0()
                             .flex()
                             .justify_end()
-                            .child(
-                                Icon::new(IconName::File)
-                                    .size_4()
-                                    .text_color(rgb(theme::MUTED)),
-                            ),
+                            .child(Icon::new(IconName::File).size_4().text_color(cx.theme().muted)),
                     ),
             )
     }
@@ -1391,11 +1301,8 @@ impl ExplorerPage {
     ) -> gpui::Div {
         let is_active = self.sort_key == key;
         let label_str = label.to_string();
-        let sort_icon = if is_active {
-            Some(if self.sort_asc { "↑" } else { "↓" })
-        } else {
-            None
-        };
+        let sort_icon =
+            if is_active { Some(if self.sort_asc { "↑" } else { "↓" }) } else { None };
 
         let mut wrapper = div();
 
@@ -1404,7 +1311,7 @@ impl ExplorerPage {
         }
 
         wrapper.child(
-            gpui_component::ListItem::new(("sort-header", key_idx))
+            gpui_component::list::ListItem::new(("sort-header", key_idx))
                 .on_click(cx.listener(move |this, _, _, _| {
                     this.set_sort_key(key);
                 }))
@@ -1418,9 +1325,9 @@ impl ExplorerPage {
                                 .text_xs()
                                 .font_weight(gpui::FontWeight::SEMIBOLD)
                                 .text_color(if is_active {
-                                    rgb(theme::FG)
+                                    cx.theme().accent_foreground
                                 } else {
-                                    rgb(theme::FG_SECONDARY)
+                                    cx.theme().secondary
                                 })
                                 .child(label_str),
                         )
@@ -1428,7 +1335,7 @@ impl ExplorerPage {
                             this.child(
                                 div()
                                     .text_xs()
-                                    .text_color(rgb(theme::FG))
+                                    .text_color(cx.theme().accent_foreground)
                                     .child(sort_icon.unwrap_or("")),
                             )
                         }),
@@ -1436,52 +1343,33 @@ impl ExplorerPage {
         )
     }
 
-    fn render_preview(&mut self) -> impl IntoElement {
+    fn render_preview(&mut self, cx: &mut App) -> impl IntoElement {
         let title = self
             .preview_path
             .as_ref()
             .map(|p| path_name(p))
             .unwrap_or_else(|| "Preview".to_string());
 
-        let body: String = self
-            .preview_text
-            .as_ref()
-            .map(|s| s.clone())
-            .unwrap_or_else(|| "Select a file to see a preview".into());
+        let body: String =
+            self.preview_text.clone().unwrap_or_else(|| "Select a file to see a preview".into());
 
         div()
             .size_full()
             .flex()
             .flex_col()
-            .bg(rgb(theme::BG))
+            .bg(cx.theme().background)
             .child(
-                div()
-                    .px(px(16.0))
-                    .py(px(12.0))
-                    .border_b_1()
-                    .border_color(rgb(theme::BORDER))
-                    .child(
-                        div()
-                            .text_sm()
-                            .font_weight(gpui::FontWeight::SEMIBOLD)
-                            .text_color(rgb(theme::FG))
-                            .child(title),
-                    ),
+                div().px(px(16.0)).py(px(12.0)).border_b_1().border_color(cx.theme().border).child(
+                    div()
+                        .text_sm()
+                        .font_weight(gpui::FontWeight::SEMIBOLD)
+                        .text_color(cx.theme().accent_foreground)
+                        .child(title),
+                ),
             )
-            .child(
-                div()
-                    .flex_1()
-                    .overflow_hidden()
-                    .px(px(16.0))
-                    .py(px(16.0))
-                    .child(
-                        div()
-                            .text_sm()
-                            .text_color(rgb(theme::FG_SECONDARY))
-                            .line_height(px(20.0))
-                            .child(body),
-                    ),
-            )
+            .child(div().flex_1().overflow_hidden().px(px(16.0)).py(px(16.0)).child(
+                div().text_sm().text_color(cx.theme().secondary).line_height(px(20.0)).child(body),
+            ))
     }
 }
 

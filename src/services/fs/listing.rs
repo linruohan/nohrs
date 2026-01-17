@@ -1,10 +1,14 @@
-use crate::core::errors::Result;
+use std::{
+    ffi::OsStr,
+    fs,
+    path::{Path, PathBuf},
+    time::UNIX_EPOCH,
+};
+
 use serde::Serialize;
-use std::ffi::OsStr;
-use std::fs;
-use std::path::{Path, PathBuf};
-use std::time::UNIX_EPOCH;
 use tokio::task;
+
+use crate::core::errors::Result;
 
 #[derive(Debug, Serialize, Clone)]
 pub struct FileEntryDto {
@@ -32,9 +36,7 @@ pub async fn list_dir(params: ListParams<'_>) -> Result<ListResult> {
     let limit = params.limit;
     let cursor = params.cursor.map(|s| s.to_string());
 
-    task::spawn_blocking(move || list_dir_impl(&path, limit, cursor.as_deref()))
-        .await
-        .unwrap()
+    task::spawn_blocking(move || list_dir_impl(&path, limit, cursor.as_deref())).await.unwrap()
 }
 
 /// Synchronous variant for UI contexts where an async runtime is not available.
@@ -46,7 +48,8 @@ fn list_dir_impl(path: &str, limit: usize, cursor: Option<&str>) -> Result<ListR
     let dir = Path::new(path);
     let mut names: Vec<(String, PathBuf)> = Vec::new();
 
-    // Read directory entries: collect names and paths only (cheap), then sort by name for stable paging.
+    // Read directory entries: collect names and paths only (cheap), then sort by name for stable
+    // paging.
     for entry in fs::read_dir(dir)? {
         let entry = entry?;
         let file_name = os_str_to_string(entry.file_name());
@@ -55,10 +58,7 @@ fn list_dir_impl(path: &str, limit: usize, cursor: Option<&str>) -> Result<ListR
     names.sort_by(|a, b| a.0.to_lowercase().cmp(&b.0.to_lowercase()));
 
     let total = names.len();
-    let offset = cursor
-        .and_then(|s| s.parse::<usize>().ok())
-        .unwrap_or(0)
-        .min(total);
+    let offset = cursor.and_then(|s| s.parse::<usize>().ok()).unwrap_or(0).min(total);
 
     let end = (offset + limit).min(total);
     let slice = &names[offset..end];
@@ -83,7 +83,7 @@ fn list_dir_impl(path: &str, limit: usize, cursor: Option<&str>) -> Result<ListR
                 } else {
                     ("other".to_string(), 0, modified)
                 }
-            }
+            },
             Err(_) => ("unknown".to_string(), 0, 0),
         };
 
@@ -96,16 +96,9 @@ fn list_dir_impl(path: &str, limit: usize, cursor: Option<&str>) -> Result<ListR
         });
     }
 
-    let next_cursor = if end < total {
-        Some(end.to_string())
-    } else {
-        None
-    };
+    let next_cursor = if end < total { Some(end.to_string()) } else { None };
 
-    Ok(ListResult {
-        entries,
-        next_cursor,
-    })
+    Ok(ListResult { entries, next_cursor })
 }
 
 fn os_str_to_string(s: impl AsRef<OsStr>) -> String {

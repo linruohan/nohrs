@@ -1,9 +1,7 @@
 #![cfg(feature = "gui")]
 
-use crate::ui::theme::theme;
-use gpui::{div, prelude::*, px, rgb, Context, IntoElement};
-use gpui_component::{Icon, IconName};
-
+use gpui::{div, prelude::*, px, Context, IntoElement};
+use gpui_component::{gray_200, gray_300, gray_700, ActiveTheme, Icon, IconName};
 #[derive(Clone)]
 pub struct FooterProps {
     pub selected_count: usize,
@@ -36,9 +34,9 @@ pub fn footer<V: gpui::Render>(props: FooterProps, cx: &mut Context<V>) -> impl 
         .items_center()
         .justify_between()
         .px(px(8.0))
-        .bg(rgb(theme::GRAY_200))
+        .bg(gray_200())
         .border_t_1()
-        .border_color(rgb(theme::BORDER))
+        .border_color(cx.theme().border)
         .child(
             // Left section - Status items
             div()
@@ -121,16 +119,9 @@ fn footer_button<V: gpui::Render>(
         .gap_1()
         .rounded(px(4.0))
         .cursor_pointer()
-        .hover(|style| style.bg(rgb(theme::GRAY_300)))
-        .child(Icon::new(icon).size_3().text_color(rgb(theme::GRAY_700)))
-        .when(has_label, |this| {
-            this.child(
-                div()
-                    .text_xs()
-                    .text_color(rgb(theme::GRAY_700))
-                    .child(label),
-            )
-        })
+        .hover(|style| style.bg(gray_300()))
+        .child(Icon::new(icon).size_3().text_color(gray_700()))
+        .when(has_label, |this| this.child(div().text_xs().text_color(gray_700()).child(label)))
 }
 
 fn truncate_path(path: &str, max_len: usize) -> String {

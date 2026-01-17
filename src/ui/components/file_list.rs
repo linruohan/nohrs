@@ -1,10 +1,13 @@
 #![cfg(feature = "gui")]
 
+use gpui::{div, px, ParentElement, Styled, Window};
+use gpui_component::{
+    gray_50, gray_600,
+    list::{ListDelegate, ListItem, ListState},
+    ActiveTheme, Icon, IconName, IndexPath,
+};
+
 use crate::services::fs::listing::FileEntryDto;
-use crate::ui::theme::theme;
-use gpui::{div, px, rgb, ParentElement, Styled, Window};
-use gpui_component::list::{List, ListDelegate, ListItem};
-use gpui_component::{Icon, IconName, IndexPath};
 
 pub struct FileListDelegate {
     pub items: Vec<FileEntryDto>,
@@ -15,11 +18,7 @@ pub struct FileListDelegate {
 
 impl FileListDelegate {
     pub fn new() -> Self {
-        Self {
-            items: Vec::new(),
-            selected: None,
-            on_confirm: None,
-        }
+        Self { items: Vec::new(), selected: None, on_confirm: None }
     }
 
     pub fn set_items(&mut self, items: Vec<FileEntryDto>) {
@@ -28,7 +27,7 @@ impl FileListDelegate {
     }
 
     pub fn get_selected(&self) -> Option<&FileEntryDto> {
-        self.selected.map(|ix| self.items.get(ix.row)).flatten()
+        self.selected.and_then(|ix| self.items.get(ix.row))
     }
 }
 
@@ -40,10 +39,10 @@ impl ListDelegate for FileListDelegate {
     }
 
     fn render_item(
-        &self,
+        &mut self,
         ix: IndexPath,
         _window: &mut Window,
-        _cx: &mut gpui::Context<List<Self>>,
+        cx: &mut gpui::Context<ListState<Self>>,
     ) -> Option<Self::Item> {
         let item = self.items.get(ix.row)?;
 
@@ -54,18 +53,14 @@ impl ListDelegate for FileListDelegate {
         };
 
         // Alternate row background for zebra striping
-        let bg_color = if ix.row % 2 == 0 {
-            theme::BG
-        } else {
-            theme::GRAY_50
-        };
+        let bg_color = if ix.row.is_multiple_of(2) { cx.theme().background } else { gray_50() };
 
         let file_type = get_file_type(&item.name, &item.kind);
 
-        let mut row = ListItem::new(ix.clone())
+        let mut row = ListItem::new(ix)
             .py(px(6.0)) // Reduced from 12.0 for compact rows
             .px(px(24.0))
-            .bg(rgb(bg_color))
+            .bg(bg_color)
             .child(
                 div()
                     .flex()
@@ -82,13 +77,13 @@ impl ListDelegate for FileListDelegate {
                             .child(
                                 Icon::new(icon_name)
                                     .size_4()
-                                    .text_color(rgb(theme::GRAY_600)),
+                                    .text_color(gray_600()),
                             )
                             .child(
                                 div()
                                     .text_sm()
                                     .font_weight(gpui::FontWeight::MEDIUM)
-                                    .text_color(rgb(theme::FG))
+                                    .text_color(cx.theme().accent_foreground)
                                     .overflow_hidden()
                                     .text_ellipsis()
                                     .whitespace_nowrap()
@@ -101,7 +96,7 @@ impl ListDelegate for FileListDelegate {
                             .w(px(70.0))
                             .flex_shrink_0()
                             .text_sm()
-                            .text_color(rgb(theme::FG_SECONDARY))
+                            .text_color(cx.theme().secondary)
                             .overflow_hidden()
                             .text_ellipsis()
                             .whitespace_nowrap()
@@ -113,7 +108,7 @@ impl ListDelegate for FileListDelegate {
                             .w(px(70.0))
                             .flex_shrink_0()
                             .text_sm()
-                            .text_color(rgb(theme::FG_SECONDARY))
+                            .text_color(cx.theme().secondary)
                             .text_ellipsis()
                             .whitespace_nowrap()
                             .child(match item.kind.as_str() {
@@ -128,7 +123,7 @@ impl ListDelegate for FileListDelegate {
                             .w(px(90.0))
                             .flex_shrink_0()
                             .text_sm()
-                            .text_color(rgb(theme::FG_SECONDARY))
+                            .text_color(cx.theme().secondary)
                             .overflow_hidden()
                             .text_ellipsis()
                             .whitespace_nowrap()
@@ -144,7 +139,7 @@ impl ListDelegate for FileListDelegate {
                             .child(
                                 Icon::new(IconName::File)
                                     .size_4()
-                                    .text_color(rgb(theme::MUTED))
+                                    .text_color(cx.theme().muted)
                                     .cursor_pointer(),
                             ),
                     ),
@@ -169,7 +164,7 @@ impl ListDelegate for FileListDelegate {
         &mut self,
         ix: Option<IndexPath>,
         _window: &mut Window,
-        _cx: &mut gpui::Context<List<Self>>,
+        _cx: &mut gpui::Context<ListState<Self>>,
     ) {
         self.selected = ix;
     }
@@ -178,7 +173,7 @@ impl ListDelegate for FileListDelegate {
         &mut self,
         _secondary: bool,
         _window: &mut Window,
-        _cx: &mut gpui::Context<List<Self>>,
+        _cx: &mut gpui::Context<ListState<Self>>,
     ) {
         if let Some(ix) = self.selected {
             if let Some(item) = self.items.get(ix.row) {
@@ -229,15 +224,12 @@ pub fn get_file_type(name: &str, kind: &str) -> String {
     match kind {
         "dir" => "Folder".to_string(),
         "file" => {
-            if let Some(ext) = std::path::Path::new(name)
-                .extension()
-                .and_then(|e| e.to_str())
-            {
+            if let Some(ext) = std::path::Path::new(name).extension().and_then(|e| e.to_str()) {
                 ext.to_uppercase()
             } else {
                 "File".to_string()
             }
-        }
+        },
         "symlink" => "Link".to_string(),
         other => other.to_string(),
     }

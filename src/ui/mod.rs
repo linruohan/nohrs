@@ -2,7 +2,7 @@
 
 pub mod app;
 pub mod assets;
-pub mod theme;
+pub mod themes;
 pub mod window;
 
 // Public UI entry points that don't pull external UI toolkits yet.

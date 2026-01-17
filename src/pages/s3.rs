@@ -1,6 +1,5 @@
-use crate::ui::theme::theme;
-use gpui::{div, prelude::*, px, rgb, AnyElement, Context, Render, Window};
-
+use gpui::{div, prelude::*, px, AnyElement, Context, Render, Window};
+use gpui_component::ActiveTheme;
 pub struct S3Page;
 
 impl S3Page {
@@ -10,26 +9,26 @@ impl S3Page {
 }
 
 impl Render for S3Page {
-    fn render(&mut self, _window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         div()
             .size_full()
             .flex()
             .flex_col()
             .items_center()
             .justify_center()
-            .bg(rgb(theme::BG))
+            .bg(cx.theme().background)
             .child(
                 div()
                     .text_2xl()
                     .font_weight(gpui::FontWeight::BOLD)
-                    .text_color(rgb(theme::FG))
+                    .text_color(cx.theme().accent_foreground)
                     .child("☁️ S3"),
             )
             .child(
                 div()
                     .mt(px(16.0))
                     .text_base()
-                    .text_color(rgb(theme::FG_SECONDARY))
+                    .text_color(cx.theme().secondary)
                     .child("S3 compatible storage integration to be implemented"),
             )
     }
