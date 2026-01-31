@@ -195,6 +195,16 @@ impl RootView {
         let note = Notification::new().message("You have toggled search.").id::<Search>();
         window.push_notification(note, cx);
     }
+
+    fn on_account_menu_action(
+        &mut self,
+        _action: &components::layout::unified_toolbar::AccountMenuAction,
+        _window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        // Propagate the action to child views
+        cx.propagate();
+    }
 }
 
 impl Focusable for RootView {
@@ -213,6 +223,7 @@ impl Render for RootView {
             .id("story-root")
             .on_action(cx.listener(Self::on_action_panel_info))
             .on_action(cx.listener(Self::on_action_toggle_search))
+            .on_action(cx.listener(Self::on_account_menu_action))
             .size_full()
             .child(
                 v_flex()

@@ -1,9 +1,5 @@
-use gpui::{
-    div, prelude::*, px, AnyElement, App, Context, Entity, Focusable, IntoElement, Render, Window,
-};
-use gpui_component::{
-    input::InputState, orange_200, resizable::ResizableState, ActiveTheme, Icon, Root,
-};
+use gpui::{div, prelude::*, px, AnyElement, App, Context, Entity, IntoElement, Render, Window};
+use gpui_component::{input::InputState, orange_200, ActiveTheme, Icon, Root};
 use tracing::info;
 
 use crate::{
@@ -29,13 +25,10 @@ pub struct NohrsApp {
 }
 impl NohrsApp {
     pub fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
-        let resizable = cx.new(|_| ResizableState::default());
         let search_input = cx.new(|cx| InputState::new(window, cx));
 
         // Create page instances
-        let explorer = cx.new(|cx| {
-            ExplorerPage::new(resizable.clone(), search_input.clone(), cx.focus_handle())
-        });
+        let explorer = cx.new(|cx| ExplorerPage::new(search_input.clone(), cx.focus_handle()));
         let search = cx.new(|_cx| SearchPage::new());
         let git = cx.new(|_cx| GitPage::new());
         let s3 = cx.new(|_cx| S3Page::new());
@@ -68,10 +61,18 @@ impl NohrsApp {
             },
             AccountMenuCommand::Settings => self.set_page(PageKind::Settings, cx),
             AccountMenuCommand::Extensions => self.set_page(PageKind::Extensions, cx),
-            AccountMenuCommand::Keymap
-            | AccountMenuCommand::Themes
-            | AccountMenuCommand::IconThemes => {
-                info!(?action.command, "Account menu item not yet implemented");
+            AccountMenuCommand::Keymap => {
+                // TODO: 实现快捷键设置功能
+                info!("Keymap settings not yet implemented");
+                window.prevent_default();
+            },
+            AccountMenuCommand::Themes => {
+                // 切换到设置页面，用户可以在那里选择主题
+                self.set_page(PageKind::Settings, cx);
+            },
+            AccountMenuCommand::IconThemes => {
+                // TODO: 实现图标主题功能
+                info!("Icon themes not yet implemented");
                 window.prevent_default();
             },
             AccountMenuCommand::SignOut => {

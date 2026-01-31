@@ -11,7 +11,7 @@ use gpui_component::{
     breadcrumb::{Breadcrumb, BreadcrumbItem},
     input::{Input, InputState},
     list::{ListEvent, ListState},
-    resizable::{h_resizable, resizable_panel, ResizableState},
+    resizable::{h_resizable, resizable_panel},
     v_virtual_list, ActiveTheme, Icon, IconName, VirtualListScrollHandle,
 };
 
@@ -46,7 +46,6 @@ pub struct ExplorerPage {
     search_query: String,
     search_visible: bool,
     search_input: Entity<InputState>,
-    resizable: Entity<ResizableState>,
     list: Option<Entity<ListState<FileListDelegate>>>,
     subs: Vec<gpui::Subscription>,
     preview_path: Option<String>,
@@ -63,7 +62,6 @@ pub struct ExplorerPage {
     // Resize state
     resizing_column: Option<ResizingColumn>,
     focus_handle: FocusHandle,
-    focus_requested: bool,
     last_click_info: Option<LastClickInfo>,
     view_mode: ViewMode,
 }
@@ -90,11 +88,7 @@ struct LastClickInfo {
 const CONFIRM_SUPPRESS_WINDOW: Duration = Duration::from_millis(300);
 
 impl ExplorerPage {
-    pub fn new(
-        resizable: Entity<ResizableState>,
-        search_input: Entity<InputState>,
-        focus_handle: FocusHandle,
-    ) -> Self {
+    pub fn new(search_input: Entity<InputState>, focus_handle: FocusHandle) -> Self {
         Self {
             cwd: std::env::current_dir()
                 .map(|p| p.to_string_lossy().to_string())
@@ -108,7 +102,6 @@ impl ExplorerPage {
             search_query: String::new(),
             search_visible: false,
             search_input,
-            resizable,
             list: None,
             subs: Vec::new(),
             preview_path: None,
@@ -124,7 +117,6 @@ impl ExplorerPage {
             col_action_width: 60.0,
             resizing_column: None,
             focus_handle,
-            focus_requested: false,
             last_click_info: None,
             view_mode: ViewMode::List,
         }
@@ -442,10 +434,6 @@ impl ExplorerPage {
 impl Render for ExplorerPage {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         self.ensure_loaded();
-        if !self.focus_requested {
-            self.focus_requested = true;
-            cx.focus_self(window);
-        }
 
         div()
             .size_full()
