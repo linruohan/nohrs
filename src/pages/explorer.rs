@@ -1268,7 +1268,7 @@ impl ExplorerPage {
                                 .text_color(if is_active {
                                     cx.theme().magenta
                                 } else {
-                                    cx.theme().muted
+                                    cx.theme().foreground.alpha(0.6)
                                 })
                                 .child(label_str),
                         )
@@ -1311,6 +1311,23 @@ impl ExplorerPage {
             .child(div().flex_1().overflow_hidden().px(px(16.0)).py(px(16.0)).child(
                 div().text_sm().text_color(cx.theme().foreground).line_height(px(20.0)).child(body),
             ))
+    }
+
+    // Public getters for footer data
+    pub fn selected_count(&self) -> usize {
+        if self.selected_index.is_some() {
+            1
+        } else {
+            0
+        }
+    }
+
+    pub fn total_count(&self) -> usize {
+        self.entries.len()
+    }
+
+    pub fn current_path(&self) -> &str {
+        &self.cwd
     }
 }
 

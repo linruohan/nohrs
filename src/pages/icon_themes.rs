@@ -4,7 +4,7 @@ pub struct IconThemesPage;
 
 impl Default for IconThemesPage {
     fn default() -> Self {
-        Self
+        Self::new()
     }
 }
 

@@ -156,6 +156,16 @@ impl NohrsApp {
 
 impl Render for NohrsApp {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        let mut footer_props = FooterProps::default();
+
+        // Update footer props based on current page
+        if self.current_page == PageKind::Explorer {
+            let explorer = self.explorer.read(cx);
+            footer_props.selected_count = explorer.selected_count();
+            footer_props.total_count = explorer.total_count();
+            footer_props.current_path = explorer.current_path().to_string();
+        }
+
         div()
             .size_full()
             .flex()
@@ -186,7 +196,7 @@ impl Render for NohrsApp {
             )
             .child(
                 // Footer status bar
-                footer(FooterProps::default(), cx),
+                footer(footer_props, cx),
             )
     }
 }

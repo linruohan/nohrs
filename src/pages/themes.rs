@@ -4,7 +4,7 @@ pub struct ThemesPage;
 
 impl Default for ThemesPage {
     fn default() -> Self {
-        Self
+        Self::new()
     }
 }
 

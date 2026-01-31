@@ -4,7 +4,7 @@ pub struct KeymapPage;
 
 impl Default for KeymapPage {
     fn default() -> Self {
-        Self
+        Self::new()
     }
 }
 
