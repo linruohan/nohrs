@@ -189,7 +189,7 @@ impl Action for AccountMenuAction {
     }
 
     fn partial_eq(&self, other: &dyn Action) -> bool {
-        other.as_any().downcast_ref::<Self>().map_or(false, |action| action.command == self.command)
+        other.as_any().downcast_ref::<Self>().is_some_and(|action| action.command == self.command)
     }
 
     fn name(&self) -> &'static str {

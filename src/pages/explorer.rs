@@ -445,11 +445,10 @@ impl Render for ExplorerPage {
             .on_key_down(cx.listener(|this, event: &gpui::KeyDownEvent, window, cx| {
                 let key_lc = event.keystroke.key.to_lowercase();
                 let is_f = key_lc == "f" || event.keystroke.key == "KeyF";
-                if is_f && (event.keystroke.modifiers.platform || event.keystroke.modifiers.control)
+                if (is_f
+                    && (event.keystroke.modifiers.platform || event.keystroke.modifiers.control))
+                    || (key_lc == "escape" && this.search_visible)
                 {
-                    this.toggle_search(window, cx);
-                    cx.stop_propagation();
-                } else if key_lc == "escape" && this.search_visible {
                     this.toggle_search(window, cx);
                     cx.stop_propagation();
                 }
@@ -818,11 +817,6 @@ impl ExplorerPage {
 
     fn render_list_view(&mut self, cx: &mut Context<Self>) -> AnyElement {
         let table_width = self.total_table_width();
-        let col_name = self.col_name_width;
-        let col_type = self.col_type_width;
-        let col_size = self.col_size_width;
-        let col_modified = self.col_modified_width;
-        let col_action = self.col_action_width;
 
         div()
             .size_full()
@@ -830,15 +824,7 @@ impl ExplorerPage {
             .flex_col()
             .min_h(px(0.0))
             .overflow_hidden()
-            .child(self.render_table_with_header(
-                table_width,
-                col_name,
-                col_type,
-                col_size,
-                col_modified,
-                col_action,
-                cx,
-            ))
+            .child(self.render_table_with_header(table_width, cx))
             .into_any_element()
     }
 
@@ -1028,11 +1014,6 @@ impl ExplorerPage {
     fn render_table_with_header(
         &mut self,
         table_width: f32,
-        col_name: f32,
-        col_type: f32,
-        col_size: f32,
-        col_modified: f32,
-        col_action: f32,
         cx: &mut Context<Self>,
     ) -> impl IntoElement {
         let entity = cx.entity().clone();
@@ -1051,18 +1032,7 @@ impl ExplorerPage {
                     visible_range
                         .filter_map(|ix| {
                             if ix == 0 {
-                                Some(
-                                    view.render_header_row(
-                                        table_width,
-                                        col_name,
-                                        col_type,
-                                        col_size,
-                                        col_modified,
-                                        col_action,
-                                        cx,
-                                    )
-                                    .into_any_element(),
-                                )
+                                Some(view.render_header_row(table_width, cx).into_any_element())
                             } else {
                                 let data_ix = ix - 1;
                                 view.filtered_entries.get(data_ix).map(|item| {
@@ -1077,16 +1047,7 @@ impl ExplorerPage {
         )
     }
 
-    fn render_header_row(
-        &self,
-        table_width: f32,
-        col_name: f32,
-        col_type: f32,
-        col_size: f32,
-        col_modified: f32,
-        col_action: f32,
-        cx: &mut Context<Self>,
-    ) -> impl IntoElement {
+    fn render_header_row(&self, table_width: f32, cx: &mut Context<Self>) -> impl IntoElement {
         div()
             .w(px(table_width))
             .h(px(48.0))
@@ -1104,31 +1065,31 @@ impl ExplorerPage {
                         "Name",
                         SortKey::Name,
                         0,
-                        col_name,
+                        self.col_name_width,
                         cx,
                     ))
                     .child(self.render_resizable_column_header(
                         "Type",
                         SortKey::Type,
                         1,
-                        col_type,
+                        self.col_type_width,
                         cx,
                     ))
                     .child(self.render_resizable_column_header(
                         "Size",
                         SortKey::Size,
                         2,
-                        col_size,
+                        self.col_size_width,
                         cx,
                     ))
                     .child(self.render_resizable_column_header(
                         "Modified",
                         SortKey::Modified,
                         3,
-                        col_modified,
+                        self.col_modified_width,
                         cx,
                     ))
-                    .child(div().w(px(col_action)).flex_shrink_0()),
+                    .child(div().w(px(self.col_action_width)).flex_shrink_0()),
             )
     }
 

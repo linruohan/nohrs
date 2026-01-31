@@ -2,6 +2,12 @@ use gpui::{div, prelude::*, px, AnyElement, Context, Render, Window};
 use gpui_component::ActiveTheme;
 pub struct SettingsPage;
 
+impl Default for SettingsPage {
+    fn default() -> Self {
+        Self
+    }
+}
+
 impl SettingsPage {
     pub fn new() -> Self {
         Self

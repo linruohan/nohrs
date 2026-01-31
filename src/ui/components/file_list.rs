@@ -6,6 +6,7 @@ use gpui_component::{
 
 use crate::services::fs::listing::FileEntryDto;
 
+#[derive(Default)]
 pub struct FileListDelegate {
     pub items: Vec<FileEntryDto>,
     pub selected: Option<IndexPath>,

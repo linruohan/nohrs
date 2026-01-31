@@ -2,6 +2,12 @@ use gpui::{div, px, AnyElement, Context, IntoElement, ParentElement, Render, Sty
 use gpui_component::ActiveTheme;
 pub struct SearchPage;
 
+impl Default for SearchPage {
+    fn default() -> Self {
+        Self
+    }
+}
+
 impl SearchPage {
     pub fn new() -> Self {
         Self

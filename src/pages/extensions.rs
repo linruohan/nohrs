@@ -2,6 +2,12 @@ use gpui::{div, prelude::*, px, AnyElement, Context, Render, Window};
 use gpui_component::ActiveTheme;
 pub struct ExtensionsPage;
 
+impl Default for ExtensionsPage {
+    fn default() -> Self {
+        Self
+    }
+}
+
 impl ExtensionsPage {
     pub fn new() -> Self {
         Self

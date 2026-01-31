@@ -17,6 +17,6 @@ fn main() {
         ui::init(cx);
         cx.activate(true);
 
-        create_new_window("Nohrs", move |window, cx| NohrsApp::view(window, cx), cx);
+        create_new_window("Nohrs", NohrsApp::view, cx);
     });
 }

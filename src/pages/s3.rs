@@ -2,6 +2,12 @@ use gpui::{div, prelude::*, px, AnyElement, Context, Render, Window};
 use gpui_component::ActiveTheme;
 pub struct S3Page;
 
+impl Default for S3Page {
+    fn default() -> Self {
+        Self
+    }
+}
+
 impl S3Page {
     pub fn new() -> Self {
         Self

@@ -2,6 +2,12 @@ use gpui::{div, prelude::*, px, AnyElement, Context, Render, Window};
 use gpui_component::ActiveTheme;
 pub struct GitPage;
 
+impl Default for GitPage {
+    fn default() -> Self {
+        Self
+    }
+}
+
 impl GitPage {
     pub fn new() -> Self {
         Self
