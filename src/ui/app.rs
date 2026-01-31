@@ -1,84 +1,24 @@
 use gpui::{
-    div, prelude::*, px, size, AnyElement, App, Application, Bounds, Context, Entity, FocusHandle,
-    Focusable, IntoElement, Render, Window,
+    div, prelude::*, px, AnyElement, App, Context, Entity, Focusable, IntoElement, Render, Window,
 };
 use gpui_component::{
     input::InputState, orange_200, resizable::ResizableState, ActiveTheme, Icon, Root,
 };
-use gpui_component_assets::Assets;
 use tracing::info;
 
 use crate::{
-    core::telemetry::logging::init_logging,
     pages::{
         explorer::ExplorerPage, extensions::ExtensionsPage, git::GitPage, s3::S3Page,
         search::SearchPage, settings::SettingsPage, PageKind,
     },
-    ui::{
-        components::layout::{
-            footer::{footer, FooterProps},
-            unified_toolbar::{
-                AccountMenuAction, AccountMenuCommand,
-                UNIFIED_TOOLBAR_HEIGHT,
-            },
-        },
-        window::{self, traffic_lights::TrafficLightsHook},
-        AppTitleBar,
+    ui::components::layout::{
+        footer::{footer, FooterProps},
+        unified_toolbar::{AccountMenuAction, AccountMenuCommand},
     },
 };
 
-pub struct NohrsApp;
-
-impl NohrsApp {
-    pub fn run() {
-        init_logging();
-
-        Application::new().with_assets(Assets).run(|app: &mut App| {
-            super::init(app);
-
-            let bounds = Bounds::centered(None, size(px(1280.0), px(780.0)), app);
-            let traffic_lights = TrafficLightsHook::new().center_vertically(UNIFIED_TOOLBAR_HEIGHT);
-            let window_options = window::unified_window_options(bounds, &traffic_lights);
-
-            app.open_window(window_options, |window, cx| {
-                let resizable = cx.new(|_| ResizableState::default());
-                let search_input = cx.new(|cx| InputState::new(window, cx));
-                let focus_handle = cx.focus_handle();
-
-                // Create page instances
-                let explorer = cx.new(|cx| {
-                    ExplorerPage::new(resizable.clone(), search_input.clone(), cx.focus_handle())
-                });
-                let search = cx.new(|_cx| SearchPage::new());
-                let git = cx.new(|_cx| GitPage::new());
-                let s3 = cx.new(|_cx| S3Page::new());
-                let extensions = cx.new(|_cx| ExtensionsPage::new());
-                let settings = cx.new(|_cx| SettingsPage::new());
-                let title_bar = cx.new(|cx| AppTitleBar::new("nohrs", window, cx));
-
-                let view = cx.new(|_cx| RootView {
-                    current_page: PageKind::Explorer,
-                    focus_handle,
-                    title_bar,
-                    explorer,
-                    search,
-                    git,
-                    s3,
-                    extensions,
-                    settings,
-                });
-
-                cx.new(|cx| Root::new(view.clone(), window, cx))
-            })
-            .expect("open window");
-        });
-    }
-}
-
-pub struct RootView {
+pub struct NohrsApp {
     current_page: PageKind,
-    focus_handle: FocusHandle,
-    title_bar: Entity<AppTitleBar>,
     // Page entities
     explorer: Entity<ExplorerPage>,
     search: Entity<SearchPage>,
@@ -87,69 +27,35 @@ pub struct RootView {
     extensions: Entity<ExtensionsPage>,
     settings: Entity<SettingsPage>,
 }
+impl NohrsApp {
+    pub fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
+        let resizable = cx.new(|_| ResizableState::default());
+        let search_input = cx.new(|cx| InputState::new(window, cx));
 
-impl RootView {
+        // Create page instances
+        let explorer = cx.new(|cx| {
+            ExplorerPage::new(resizable.clone(), search_input.clone(), cx.focus_handle())
+        });
+        let search = cx.new(|_cx| SearchPage::new());
+        let git = cx.new(|_cx| GitPage::new());
+        let s3 = cx.new(|_cx| S3Page::new());
+        let extensions = cx.new(|_cx| ExtensionsPage::new());
+        let settings = cx.new(|_cx| SettingsPage::new());
+
+        Self { current_page: PageKind::Explorer, explorer, search, git, s3, extensions, settings }
+    }
+
+    pub fn view(window: &mut Window, cx: &mut App) -> Entity<Self> {
+        cx.new(|cx| Self::new(window, cx))
+    }
+
     pub fn set_page(&mut self, page: PageKind, cx: &mut Context<Self>) {
         if self.current_page != page {
             self.current_page = page;
             cx.notify();
         }
     }
-}
 
-impl Focusable for RootView {
-    fn focus_handle(&self, _cx: &App) -> FocusHandle {
-        self.focus_handle.clone()
-    }
-}
-
-impl Render for RootView {
-    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let sheet_layer = Root::render_sheet_layer(window, cx);
-        let dialog_layer = Root::render_dialog_layer(window, cx);
-        let notification_layer = Root::render_notification_layer(window, cx);
-
-        div()
-            .size_full()
-            .flex()
-            .flex_col()
-            .bg(cx.theme().background)
-            .relative()
-            .track_focus(&self.focus_handle)
-            .on_action(cx.listener(Self::handle_account_action))
-            .child(self.title_bar.clone())
-            .child(
-                // Main content: toolbar + page
-                div()
-                    .flex_1()
-                    .flex()
-                    .flex_row()
-                    .min_h(px(0.0))
-                    .child(
-                        // Left navigation toolbar
-                        self.render_navigation(cx),
-                    )
-                    .child(
-                        // Main content area - render active page
-                        div()
-                            .flex_1()
-                            .flex()
-                            .flex_col()
-                            .min_w(px(0.0))
-                            .child(self.render_active_page(window, cx)),
-                    ),
-            )
-            .child(
-                // Footer status bar
-                footer(FooterProps::default(), cx),
-            )
-            .children(sheet_layer)
-            .children(dialog_layer)
-            .children(notification_layer)
-    }
-}
-
-impl RootView {
     fn handle_account_action(
         &mut self,
         action: &AccountMenuAction,
@@ -234,5 +140,49 @@ impl RootView {
             PageKind::Extensions => self.extensions.clone().into_any_element(),
             PageKind::Settings => self.settings.clone().into_any_element(),
         }
+    }
+}
+
+impl Render for NohrsApp {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        let sheet_layer = Root::render_sheet_layer(window, cx);
+        let dialog_layer = Root::render_dialog_layer(window, cx);
+        let notification_layer = Root::render_notification_layer(window, cx);
+
+        div()
+            .size_full()
+            .flex()
+            .flex_col()
+            .bg(cx.theme().background)
+            .relative()
+            .on_action(cx.listener(Self::handle_account_action))
+            .child(
+                // Main content: toolbar + page
+                div()
+                    .flex_1()
+                    .flex()
+                    .flex_row()
+                    .min_h(px(0.0))
+                    .child(
+                        // Left navigation toolbar
+                        self.render_navigation(cx),
+                    )
+                    .child(
+                        // Main content area - render active page
+                        div()
+                            .flex_1()
+                            .flex()
+                            .flex_col()
+                            .min_w(px(0.0))
+                            .child(self.render_active_page(window, cx)),
+                    ),
+            )
+            .child(
+                // Footer status bar
+                footer(FooterProps::default(), cx),
+            )
+            .children(sheet_layer)
+            .children(dialog_layer)
+            .children(notification_layer)
     }
 }
