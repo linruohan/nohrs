@@ -118,9 +118,9 @@ fn footer_button<V: gpui::Render>(
         .rounded(px(4.0))
         .cursor_pointer()
         .hover(|style| style.bg(cx.theme().secondary_hover))
-        .child(Icon::new(icon).size_3().text_color(cx.theme().secondary))
+        .child(Icon::new(icon).size_3().text_color(cx.theme().foreground))
         .when(has_label, |this| {
-            this.child(div().text_xs().text_color(cx.theme().secondary).child(label))
+            this.child(div().text_xs().text_color(cx.theme().foreground).child(label))
         })
 }
 

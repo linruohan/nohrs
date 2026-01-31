@@ -4,9 +4,12 @@ use gpui_component::IconName;
 pub mod explorer;
 pub mod extensions;
 pub mod git;
+pub mod icon_themes;
+pub mod keymap;
 pub mod s3;
 pub mod search;
 pub mod settings;
+pub mod themes;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum PageKind {
@@ -16,6 +19,9 @@ pub enum PageKind {
     S3,
     Extensions,
     Settings,
+    KeyMap,
+    Themes,
+    IconThemes,
 }
 
 impl PageKind {
@@ -27,6 +33,9 @@ impl PageKind {
             PageKind::S3 => "S3",
             PageKind::Extensions => "Extensions",
             PageKind::Settings => "Settings",
+            PageKind::KeyMap => "Keymap",
+            PageKind::Themes => "Themes",
+            PageKind::IconThemes => "Icon Themes",
         }
     }
 
@@ -38,6 +47,9 @@ impl PageKind {
             PageKind::S3 => IconName::HardDrive,
             PageKind::Extensions => IconName::LayoutDashboard,
             PageKind::Settings => IconName::Settings,
+            PageKind::KeyMap => IconName::Keyboard,
+            PageKind::Themes => IconName::Palette,
+            PageKind::IconThemes => IconName::Drama,
         }
     }
 
@@ -49,6 +61,9 @@ impl PageKind {
             PageKind::S3,
             PageKind::Extensions,
             PageKind::Settings,
+            PageKind::KeyMap,
+            PageKind::Themes,
+            PageKind::IconThemes,
         ]
     }
 }

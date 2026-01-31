@@ -198,12 +198,16 @@ impl RootView {
 
     fn on_account_menu_action(
         &mut self,
-        _action: &components::layout::unified_toolbar::AccountMenuAction,
-        _window: &mut Window,
+        action: &components::layout::unified_toolbar::AccountMenuAction,
+        window: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        // Propagate the action to child views
-        cx.propagate();
+        // Try to downcast and forward the action to NohrsApp
+        if let Ok(app) = self.view.clone().downcast::<NohrsApp>() {
+            app.update(cx, |app: &mut NohrsApp, cx| {
+                app.handle_account_action(action, window, cx);
+            });
+        }
     }
 }
 

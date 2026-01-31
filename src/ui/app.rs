@@ -1,11 +1,12 @@
 use gpui::{div, prelude::*, px, AnyElement, App, Context, Entity, IntoElement, Render, Window};
-use gpui_component::{input::InputState, orange_200, ActiveTheme, Icon, Root};
+use gpui_component::{input::InputState, orange_200, ActiveTheme, Icon};
 use tracing::info;
 
 use crate::{
     pages::{
-        explorer::ExplorerPage, extensions::ExtensionsPage, git::GitPage, s3::S3Page,
-        search::SearchPage, settings::SettingsPage, PageKind,
+        explorer::ExplorerPage, extensions::ExtensionsPage, git::GitPage,
+        icon_themes::IconThemesPage, keymap::KeymapPage, s3::S3Page, search::SearchPage,
+        settings::SettingsPage, themes::ThemesPage, PageKind,
     },
     ui::components::layout::{
         footer::{footer, FooterProps},
@@ -22,6 +23,9 @@ pub struct NohrsApp {
     s3: Entity<S3Page>,
     extensions: Entity<ExtensionsPage>,
     settings: Entity<SettingsPage>,
+    keymap: Entity<KeymapPage>,
+    themes: Entity<ThemesPage>,
+    icon_themes: Entity<IconThemesPage>,
 }
 impl NohrsApp {
     pub fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
@@ -34,8 +38,22 @@ impl NohrsApp {
         let s3 = cx.new(|_cx| S3Page::new());
         let extensions = cx.new(|_cx| ExtensionsPage::new());
         let settings = cx.new(|_cx| SettingsPage::new());
+        let keymap = cx.new(|_cx| KeymapPage::new());
+        let themes = cx.new(|_cx| ThemesPage::new());
+        let icon_themes = cx.new(|_cx| IconThemesPage::new());
 
-        Self { current_page: PageKind::Explorer, explorer, search, git, s3, extensions, settings }
+        Self {
+            current_page: PageKind::Explorer,
+            explorer,
+            search,
+            git,
+            s3,
+            extensions,
+            settings,
+            keymap,
+            themes,
+            icon_themes,
+        }
     }
 
     pub fn view(window: &mut Window, cx: &mut App) -> Entity<Self> {
@@ -49,7 +67,7 @@ impl NohrsApp {
         }
     }
 
-    fn handle_account_action(
+    pub fn handle_account_action(
         &mut self,
         action: &AccountMenuAction,
         window: &mut Window,
@@ -61,20 +79,9 @@ impl NohrsApp {
             },
             AccountMenuCommand::Settings => self.set_page(PageKind::Settings, cx),
             AccountMenuCommand::Extensions => self.set_page(PageKind::Extensions, cx),
-            AccountMenuCommand::Keymap => {
-                // TODO: 实现快捷键设置功能
-                info!("Keymap settings not yet implemented");
-                window.prevent_default();
-            },
-            AccountMenuCommand::Themes => {
-                // 切换到设置页面，用户可以在那里选择主题
-                self.set_page(PageKind::Settings, cx);
-            },
-            AccountMenuCommand::IconThemes => {
-                // TODO: 实现图标主题功能
-                info!("Icon themes not yet implemented");
-                window.prevent_default();
-            },
+            AccountMenuCommand::Keymap => self.set_page(PageKind::KeyMap, cx),
+            AccountMenuCommand::Themes => self.set_page(PageKind::Themes, cx),
+            AccountMenuCommand::IconThemes => self.set_page(PageKind::IconThemes, cx),
             AccountMenuCommand::SignOut => {
                 info!("Sign out requested");
             },
@@ -140,16 +147,15 @@ impl NohrsApp {
             PageKind::S3 => self.s3.clone().into_any_element(),
             PageKind::Extensions => self.extensions.clone().into_any_element(),
             PageKind::Settings => self.settings.clone().into_any_element(),
+            PageKind::IconThemes => self.icon_themes.clone().into_any_element(),
+            PageKind::Themes => self.themes.clone().into_any_element(),
+            PageKind::KeyMap => self.keymap.clone().into_any_element(),
         }
     }
 }
 
 impl Render for NohrsApp {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let sheet_layer = Root::render_sheet_layer(window, cx);
-        let dialog_layer = Root::render_dialog_layer(window, cx);
-        let notification_layer = Root::render_notification_layer(window, cx);
-
         div()
             .size_full()
             .flex()
@@ -182,8 +188,5 @@ impl Render for NohrsApp {
                 // Footer status bar
                 footer(FooterProps::default(), cx),
             )
-            .children(sheet_layer)
-            .children(dialog_layer)
-            .children(notification_layer)
     }
 }
