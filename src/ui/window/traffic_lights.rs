@@ -1,5 +1,3 @@
-#![cfg(feature = "gui")]
-
 use gpui::{point, px, Pixels, Point, TitlebarOptions, WindowOptions};
 
 const DEFAULT_HORIZONTAL_OFFSET: Pixels = px(12.0);

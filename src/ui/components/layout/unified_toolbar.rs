@@ -1,5 +1,3 @@
-#![cfg(feature = "gui")]
-
 use std::fmt;
 
 use gpui::{div, prelude::*, px, Action, Context, IntoElement, Pixels, Render, WindowControlArea};

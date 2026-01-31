@@ -9,7 +9,6 @@ use gpui::{
 };
 use gpui_component::{
     breadcrumb::{Breadcrumb, BreadcrumbItem},
-    gray_600,
     input::{Input, InputState},
     list::{ListEvent, ListState},
     resizable::{h_resizable, resizable_panel, ResizableState},
@@ -654,7 +653,11 @@ impl ExplorerPage {
                                 view.toggle_search(window, cx);
                             }))
                             .child(Icon::new(IconName::Search).size_4().text_color(
-                                if self.search_visible { cx.theme().magenta } else { gray_600() },
+                                if self.search_visible {
+                                    cx.theme().magenta
+                                } else {
+                                    cx.theme().muted
+                                },
                             )),
                     ),
             )
@@ -1313,7 +1316,11 @@ impl ExplorerPage {
                             div()
                                 .text_xs()
                                 .font_weight(gpui::FontWeight::SEMIBOLD)
-                                .text_color(if is_active { cx.theme().magenta } else { gray_600() })
+                                .text_color(if is_active {
+                                    cx.theme().magenta
+                                } else {
+                                    cx.theme().muted
+                                })
                                 .child(label_str),
                         )
                         .when(is_active, |this| {
@@ -1352,11 +1359,9 @@ impl ExplorerPage {
                         .child(title),
                 ),
             )
-            .child(
-                div().flex_1().overflow_hidden().px(px(16.0)).py(px(16.0)).child(
-                    div().text_sm().text_color(gray_600()).line_height(px(20.0)).child(body),
-                ),
-            )
+            .child(div().flex_1().overflow_hidden().px(px(16.0)).py(px(16.0)).child(
+                div().text_sm().text_color(cx.theme().foreground).line_height(px(20.0)).child(body),
+            ))
     }
 }
 

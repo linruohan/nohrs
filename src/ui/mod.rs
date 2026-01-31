@@ -1,7 +1,4 @@
-#![cfg(feature = "gui")]
-
 pub mod app;
-pub mod assets;
 pub mod themes;
 pub mod window;
 

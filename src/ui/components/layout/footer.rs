@@ -1,7 +1,5 @@
-#![cfg(feature = "gui")]
-
 use gpui::{div, prelude::*, px, Context, IntoElement};
-use gpui_component::{gray_200, gray_300, gray_700, ActiveTheme, Icon, IconName};
+use gpui_component::{ActiveTheme, Icon, IconName};
 #[derive(Clone)]
 pub struct FooterProps {
     pub selected_count: usize,
@@ -34,7 +32,7 @@ pub fn footer<V: gpui::Render>(props: FooterProps, cx: &mut Context<V>) -> impl 
         .items_center()
         .justify_between()
         .px(px(8.0))
-        .bg(gray_200())
+        .bg(cx.theme().background)
         .border_t_1()
         .border_color(cx.theme().border)
         .child(
@@ -105,7 +103,7 @@ fn footer_button<V: gpui::Render>(
     id: impl Into<gpui::ElementId>,
     icon: IconName,
     label: &str,
-    _cx: &mut Context<V>,
+    cx: &mut Context<V>,
 ) -> impl IntoElement {
     let label = label.to_string();
     let has_label = !label.is_empty();
@@ -119,9 +117,11 @@ fn footer_button<V: gpui::Render>(
         .gap_1()
         .rounded(px(4.0))
         .cursor_pointer()
-        .hover(|style| style.bg(gray_300()))
-        .child(Icon::new(icon).size_3().text_color(gray_700()))
-        .when(has_label, |this| this.child(div().text_xs().text_color(gray_700()).child(label)))
+        .hover(|style| style.bg(cx.theme().secondary_hover))
+        .child(Icon::new(icon).size_3().text_color(cx.theme().secondary))
+        .when(has_label, |this| {
+            this.child(div().text_xs().text_color(cx.theme().secondary).child(label))
+        })
 }
 
 fn truncate_path(path: &str, max_len: usize) -> String {

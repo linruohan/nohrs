@@ -1,5 +1,3 @@
-#![cfg(feature = "gui")]
-
 use gpui::{div, prelude::*, px, App, IntoElement};
 use gpui_component::ActiveTheme;
 /// Non-functional tab bar (placeholder)

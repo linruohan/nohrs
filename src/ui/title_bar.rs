@@ -14,9 +14,8 @@ use gpui_component::{
     ActiveTheme as _, IconName, PixelsExt, Side, Sizable as _, Theme, TitleBar, WindowExt as _,
 };
 
-use crate::ui::{
-    app_menus, SelectFont, SelectRadius, SelectScrollbarShow, ToggleListActiveHighlight,
-};
+use super::{app_menus, SelectFont, SelectRadius, SelectScrollbarShow, ToggleListActiveHighlight};
+use crate::ui::components::layout::unified_toolbar::{unified_toolbar, UnifiedToolbarProps};
 
 pub struct AppTitleBar {
     app_menu_bar: Entity<AppMenuBar>,
@@ -55,6 +54,13 @@ impl AppTitleBar {
 impl Render for AppTitleBar {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let notifications_count = window.notifications(cx).len();
+        let toolbar = unified_toolbar(
+            UnifiedToolbarProps {
+                account_name: "Gaia2036".to_string(),
+                account_plan: "Free".to_string(),
+            },
+            cx,
+        );
 
         TitleBar::new()
             // left side
@@ -93,7 +99,7 @@ impl Render for AppTitleBar {
                                     .icon(IconName::Bell),
                             ),
                         ),
-                    ),
+                    ).child(toolbar)
             )
     }
 }

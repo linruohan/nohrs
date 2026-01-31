@@ -7,15 +7,9 @@ edition = "2021"
 name = "nohrs"
 path = "src/lib.rs"
 
-
-[features]
-default = []
-gui = ["dep:gpui", "dep:gpui-component", "dep:rust-embed"]
-
 [[bin]]
 name = "nohrs"
-path = "src/gui/main.rs"
-required-features = ["gui"]
+path = "src/main.rs"
 
 [dependencies]
 anyhow = "1"
@@ -28,11 +22,11 @@ clap = { version = "4", features = ["derive"] }
 axum = "0.7"
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "signal"] }
 # Planned (add when implemented): sled = "0.34", sqlite crates, aws-sdk-s3/object_store, tantivy, gix/git2, comrak, syntect, notify
-gpui = { git = "https://github.com/zed-industries/zed", optional = true }
+gpui = { git = "https://github.com/zed-industries/zed" }
 gpui-macros = "0.2.2"
-gpui-component = { git = "https://github.com/linruohan/gpui-component.git", optional = true }
+gpui-component = { git = "https://github.com/linruohan/gpui-component.git" }
 gpui-component-assets = { git = "https://github.com/linruohan/gpui-component.git" }
-rust-embed = { version = "8", optional = true }
+rust-embed = { version = "8" }
 comrak = "0.22"
 syntect = { version = "5", default-features = false, features = ["default-fancy"] }
 image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
@@ -41,6 +35,11 @@ trash = "5"
 time = { version = "0.3", features = ["formatting", "macros"] }
 walkdir = "2"
 rust-i18n = "3.1.5"
+
+
+[target.'cfg(target_os = "windows")'.build-dependencies]
+embed-resource = "3.0.6"
+winresource = "0.1.30"
 
 [lints.clippy]
 almost_complete_range = "allow"

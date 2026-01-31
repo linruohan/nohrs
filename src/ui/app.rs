@@ -1,5 +1,3 @@
-#![cfg(feature = "gui")]
-
 use gpui::{
     div, prelude::*, px, size, AnyElement, App, Application, Bounds, Context, Entity, FocusHandle,
     Focusable, IntoElement, Render, Window,
@@ -20,7 +18,7 @@ use crate::{
         components::layout::{
             footer::{footer, FooterProps},
             unified_toolbar::{
-                unified_toolbar, AccountMenuAction, AccountMenuCommand, UnifiedToolbarProps,
+                AccountMenuAction, AccountMenuCommand,
                 UNIFIED_TOOLBAR_HEIGHT,
             },
         },
@@ -110,13 +108,6 @@ impl Render for RootView {
         let sheet_layer = Root::render_sheet_layer(window, cx);
         let dialog_layer = Root::render_dialog_layer(window, cx);
         let notification_layer = Root::render_notification_layer(window, cx);
-        let toolbar = unified_toolbar(
-            UnifiedToolbarProps {
-                account_name: "Gaia2036".to_string(),
-                account_plan: "Free".to_string(),
-            },
-            cx,
-        );
 
         div()
             .size_full()
@@ -127,7 +118,6 @@ impl Render for RootView {
             .track_focus(&self.focus_handle)
             .on_action(cx.listener(Self::handle_account_action))
             .child(self.title_bar.clone())
-            .child(toolbar)
             .child(
                 // Main content: toolbar + page
                 div()

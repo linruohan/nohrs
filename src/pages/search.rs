@@ -1,4 +1,4 @@
-use gpui::{div, prelude::*, px, AnyElement, Context, Render, Window};
+use gpui::{div, px, AnyElement, Context, IntoElement, ParentElement, Render, Styled, Window};
 use gpui_component::ActiveTheme;
 pub struct SearchPage;
 

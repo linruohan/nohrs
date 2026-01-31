@@ -1,5 +1,3 @@
-#![cfg(feature = "gui")]
-
 pub mod traffic_lights;
 
 use gpui::{Bounds, Pixels, WindowBounds, WindowOptions};

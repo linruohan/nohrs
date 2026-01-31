@@ -1,5 +1,3 @@
-#![cfg(feature = "gui")]
-
 use gpui::{div, px, ParentElement, Styled, Window};
 use gpui_component::{
     list::{ListDelegate, ListItem, ListState},
